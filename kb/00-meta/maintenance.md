@@ -71,6 +71,8 @@ related_decisions:
 - **Не оставлять файлы без front matter** — каждый `.md` имеет шапку с метаданными.
 - **Имена файлов — по [conventions.md](conventions.md)**.
 - **Глоссарий — только краткие определения.** Алгоритмы, таблицы полей, бизнес-правила — в доменные/системные файлы. См. [conventions.md](conventions.md), раздел "Правило для глоссария". Это правило — частая ошибка CC, требует осознанной проверки при каждом обновлении глоссария.
+- **Не делать ручную синхронизацию публичного зеркала.** С 2026-04-30 настроен GitHub Action `.github/workflows/sync-public.yml`, который автоматически синхронизирует `kb/` приватного репо в `trade-abkhazia-public` при каждом push в `main` с изменениями в `kb/**`. Команды `cp -r kb /trade-abkhazia-public/` + `git push` в публичный — **запрещены**. Если синхронизация не сработала — запустить вручную через GitHub UI ("Actions" → "Sync kb/ to public mirror" → "Run workflow"). См. [ADR-008](../90-decisions/ADR-008-ai-comms-architecture.md).
+- **Канал коммуникации `trade-abkhazia-comms`** — отдельный публичный репо. Содержит `inbox/` (входящие ТЗ от Архитектора и Чата через Максима), `responses/` (ответы CC), `archive/` (закрытое — только с явного согласия Максима). См. [README канала](https://github.com/maximsk7979-afk/trade-abkhazia-comms/blob/main/README.md).
 
 ---
 
