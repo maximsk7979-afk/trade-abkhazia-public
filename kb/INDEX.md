@@ -26,7 +26,8 @@ last_updated: 2026-04-28
 - [gaps.md](00-meta/gaps.md) — очередь "белых пятен"
 - [glossary.md](00-meta/glossary.md) — словарь терминов
 - [onboarding.md](00-meta/onboarding.md) — рекомендованный порядок чтения
-- [templates/](00-meta/templates/) — шаблоны новых файлов
+- [architect-onboarding.md](00-meta/architect-onboarding.md) — протокол для Архитектора в начале каждого чата
+- [templates/](00-meta/templates/) — шаблоны новых файлов (включая `architect-task.md` — шаблон ТЗ)
 
 ### 10-business/ — Бизнес как целое
 Бизнес-модель, операционная модель, стратегия.
