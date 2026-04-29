@@ -98,6 +98,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-005](90-decisions/ADR-005-eva-replaces-bot.md) — Ева замещает бота
 - [ADR-006](90-decisions/ADR-006-as-is-to-be-principle.md) — принцип AS-IS/TO-BE
 - [ADR-007](90-decisions/ADR-007-sales-canonical-model.md) — канонические форматы продаж
+- [ADR-008](90-decisions/ADR-008-ai-comms-architecture.md) — архитектура коммуникации между AI-агентами
 
 ### 95-changelog/ — История изменений
 - [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал

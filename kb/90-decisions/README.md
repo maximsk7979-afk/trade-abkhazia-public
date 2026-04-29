@@ -35,3 +35,4 @@ last_updated: 2026-04-28
 | [ADR-005](ADR-005-eva-replaces-bot.md) | Ева замещает старого бота | 2026-04-27 | accepted |
 | [ADR-006](ADR-006-as-is-to-be-principle.md) | Принцип AS-IS / TO-BE | 2026-04-27 | accepted |
 | [ADR-007](ADR-007-sales-canonical-model.md) | Канонические форматы продаж | 2026-04-28 | accepted |
+| [ADR-008](ADR-008-ai-comms-architecture.md) | Архитектура коммуникации между AI-агентами через GitHub | 2026-04-30 | accepted |
