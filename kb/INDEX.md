@@ -1,7 +1,7 @@
 ---
 title: Карта базы знаний
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-19
 ---
 
 # Карта базы знаний (INDEX)
@@ -99,6 +99,10 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-006](90-decisions/ADR-006-as-is-to-be-principle.md) — принцип AS-IS/TO-BE
 - [ADR-007](90-decisions/ADR-007-sales-canonical-model.md) — канонические форматы продаж
 - [ADR-008](90-decisions/ADR-008-ai-comms-architecture.md) — архитектура коммуникации между AI-агентами
+- [ADR-009](90-decisions/ADR-009-multitenancy-projects.md) — мультипроектная архитектура (Project + projectId сквозной)
+- [ADR-010](90-decisions/ADR-010-invoice-entity.md) — сущность Invoice (накладная поставщика)
+- [ADR-011](90-decisions/ADR-011-eva-supplier-segmentation.md) — сегментация знаний Евы по поставщикам
+- [ADR-012](90-decisions/ADR-012-eva-self-learning-plan.md) — поэтапный план самообучения Евы
 
 ### 95-changelog/ — История изменений
 - [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал
