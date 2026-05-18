@@ -1,7 +1,7 @@
 ---
 title: Карта базы знаний
 status: active
-last_updated: 2026-05-19
+last_updated: 2026-05-19 (Заход 3)
 ---
 
 # Карта базы знаний (INDEX)
@@ -48,7 +48,7 @@ last_updated: 2026-05-19
 - data-model/ — логическая модель: что такое сущности, как связаны
 - trips.md, sales.md, deliveries.md, pricing.md, ... — правила по доменам
 - settlements/ — взаиморасчёты (клиенты, поставщики, Лия, контрагенты)
-- invoices/ — накладные (распознавание, грузинский словарь)
+- invoices/ — накладные (двухуровневая база: `_common/` + `suppliers/<id>/`, см. ADR-011)
 - financial-reporting/ — формы отчётов (P&L, акт сверки)
 
 ### 25-integrations/ — Внешние сервисы
