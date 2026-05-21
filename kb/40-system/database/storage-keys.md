@@ -19,7 +19,8 @@ referenced_by:
 | `trade-sales-v1` | SK_SALES | Продажи ПС/ЗД/ЗР (одна сущность Sale, см. [ADR-007](../../90-decisions/ADR-007-sales-canonical-model.md)) |
 | `trade-deliveries-v1` | SK_DLV | Доставки Д-XXX |
 | `trade-trips-v8` | SK_T | Рейсы Р-XXX |
-| `trade-batches-v1` | SK_BATCH | FIFO-партии B-XXXX |
+| `trade-purchases-v1` | SK_PUR | Закупки вне рейса ЗК-XXX (см. [purchase.md](../data-formats/purchase.md), ADR-009 Слой Б) |
+| `trade-batches-v1` | SK_BATCH | FIFO-партии B-XXXX (источник `trip` или `purchase`) |
 | `trade-whops-v1` | SK_WH | Складские операции |
 | `trade-settlements-v2` | SK_SETT | Взаиморасчёты |
 
@@ -38,6 +39,7 @@ referenced_by:
 | `trade-cat-exptypes` | SK_EXP | Типы расходов |
 | `trade-cat-staff` | SK_STAFF | Сотрудники |
 | `trade-cat-offices` | SK_OFF | Офисы (склады) |
+| `trade-cat-projects` | SK_PRJ | Проекты PRJ-NNN (мультипроектность, [ADR-009](../../90-decisions/ADR-009-multitenancy-projects.md)) |
 
 ## Маркеры seed-блоков
 
