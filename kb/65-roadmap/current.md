@@ -1,7 +1,7 @@
 ---
 title: Roadmap — текущий план
 status: active
-last_updated: 2026-05-19
+last_updated: 2026-05-21
 ---
 
 # Roadmap
@@ -16,7 +16,7 @@ last_updated: 2026-05-19
 
 Минимум для запуска PRJ-002 (местные овощи) и PRJ-003 (грузинские овощи, июнь). На KV-store без миграции в Postgres.
 
-> **Слой А выполнен 2026-05-21** (коммиты `d1b2351`, `7514324`, `ae537d6`, `97c04f7`; код переведён под git: `0ddad47`). Не задеплоен. См. [CHANGELOG](../95-changelog/2026-Q2.md) 2026-05-21.
+> **Слой А выполнен и задеплоен 2026-05-21** (коммиты `d1b2351`, `7514324`, `ae537d6`, `97c04f7`; код переведён под git: `0ddad47`). Прод https://trade-abkhazia.com обновлён (бандл `index-DMuh29R_.js`), браузерный приёмочный тест пройден. См. [CHANGELOG](../95-changelog/2026-Q2.md) 2026-05-21.
 
 - [x] Завести справочник `trade-cat-projects` с восемью `PRJ-NNN` (см. [ADR-009](../90-decisions/ADR-009-multitenancy-projects.md) п. 2) — A1
 - [x] Добавить `projectId` в транзакционные сущности — Trip, WhOp, Batch, Settlement (default `PRJ-001`). **Sale — на per-line в Шаге 3** (ADR-009 §6, не в Шаге 1) — A2
