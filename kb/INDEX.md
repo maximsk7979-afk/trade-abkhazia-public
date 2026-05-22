@@ -104,6 +104,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-011](90-decisions/ADR-011-eva-supplier-segmentation.md) — сегментация знаний Евы по поставщикам
 - [ADR-012](90-decisions/ADR-012-eva-self-learning-plan.md) — поэтапный план самообучения Евы
 - [ADR-013](90-decisions/ADR-013-eva-agent-architecture.md) — архитектура Евы (агентный рантайм, четырёхслойная память, навыки, CRM)
+- [ADR-014](90-decisions/ADR-014-client-project-profile.md) — проектный профиль клиента, справочник сегментов, проектная привязка товара
 
 ### 95-changelog/ — История изменений
 - [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал
