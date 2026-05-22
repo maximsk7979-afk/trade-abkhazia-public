@@ -93,7 +93,7 @@ last_updated: 2026-05-22
 Прямая работа Евы с клиентами через Telegram. Архитектура принята в [ADR-013](../90-decisions/ADR-013-eva-agent-architecture.md).
 
 - [x] Зафиксировать архитектуру Евы — ADR-013, vision/architecture/memory-system (2026-05-22)
-- [ ] **Поднять Postgres под Еву** (схема из [memory-system.md](../50-agents/eva/memory-system.md): `eva_messages`, `eva_client_memory`, `eva_learning_queue`, `eva_escalations`) — отдельно, раньше общей миграции Шага 2
+- [x] **Поднять Postgres под Еву** — БД `eva` + `eva_user` + 4 таблицы созданы на VPS 2026-05-22 (Postgres 14.22 уже стоял, бэкендит KV `trade_db.app_storage`). Креды в `~/secrets-trade/`
 - [ ] Подтвердить **границу полномочий** Евы (ADR-013 п. 9) и поля профиля клиента (сегмент / ассортимент / состояние онбординга)
 - [ ] Сценарий **онбординга клиента** (`50-agents/eva/scenarios/`): менеджер заводит черновик → deep-link знакомство в Telegram → получение `tgChatId` + ассортимент → активация
 - [ ] Сценарий **приёма заявки** (перенос логики `business-rules-from-bot.md` на типы ПС/ЗД/ЗР вместо мёртвого `delivery-sale`)

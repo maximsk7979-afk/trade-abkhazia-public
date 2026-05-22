@@ -1,7 +1,7 @@
 ---
 title: Инфраструктура
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-22
 references:
   - ../40-system/api.md
   - ../40-system/database/overview.md
@@ -58,9 +58,15 @@ trade-api     порт 3001     server.js (Express API)
 
 ## PostgreSQL
 
-- БД: `trade_db` / Пользователь: `trade_user` / Хост: `localhost`
-- Пароль — в локальном `~/secrets-trade/credentials.md`
-- Структура: одна таблица `app_storage`. См. [40-system/database/overview.md](../40-system/database/overview.md)
+Версия: **14.22** (Ubuntu).
+
+- **`trade_db`** / Пользователь: `trade_user` / Хост: `localhost`
+  - Структура: одна таблица `app_storage` (бэкенд KV-store `/api/storage/<key>`). См. [40-system/database/overview.md](../40-system/database/overview.md)
+- **`eva`** / Пользователь: `eva_user` / Хост: `localhost` (создана 2026-05-22, [ADR-013](../90-decisions/ADR-013-eva-agent-architecture.md))
+  - Таблицы: `eva_messages`, `eva_client_memory`, `eva_learning_queue`, `eva_escalations`. Схема — [memory-system.md](../50-agents/eva/memory-system.md)
+  - Изолирована от `trade_db`; бизнес-данные Ева читает через HTTP data-API, не напрямую
+
+Пароли — в локальном `~/secrets-trade/credentials.md`.
 
 ## Переменные окружения
 
