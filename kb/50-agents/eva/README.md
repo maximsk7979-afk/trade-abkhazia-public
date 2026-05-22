@@ -1,9 +1,10 @@
 ---
 title: Eva — ИИ-агент
 status: design
-last_updated: 2026-04-28
+last_updated: 2026-05-22
 related_decisions:
   - ../../90-decisions/ADR-005-eva-replaces-bot.md
+  - ../../90-decisions/ADR-013-eva-agent-architecture.md
 ---
 
 # Eva — ИИ-агент
@@ -12,16 +13,16 @@ related_decisions:
 
 ## Текущий статус
 
-🛠 **В проектировании**. Совместная работа: Максим + Архитектор (Claude в браузере) + CC.
+🛠 **В проектировании**. Архитектура зафиксирована в [ADR-013](../../90-decisions/ADR-013-eva-agent-architecture.md) (2026-05-22): агентный рантайм, четырёхслойная память, навыки, CRM-функции, хранилище в Postgres. Дальше — Postgres под Еву, затем поля профиля клиента и сценарий онбординга.
 
 ## Что внутри
 
-- **vision.md** — видение, цель, что Ева умеет ⏳ заглушка
-- **architecture.md** — компоненты: память, инструменты, роутер ⏳ заглушка
-- **memory-system.md** — как устроена память Евы ⏳ заглушка
-- **tools/** — инструменты, которые Ева использует
-- **prompts/** — промпты по ролям (system-base + role-specific)
-- **scenarios/** — бизнес-сценарии: как Ева решает конкретные задачи
+- **vision.md** — видение, характер, принципы (фундамент системного промпта) ✅
+- **architecture.md** — компоненты, потоки, навыки ✅
+- **memory-system.md** — четыре слоя памяти + схема БД ✅
+- **tools/** — контракты инструментов ⏳ в проектировании
+- **prompts/** — промпты по ролям (system-base + role-specific) ⏳
+- **scenarios/** — бизнес-сценарии: онбординг клиента, приём заявки, напоминания ⏳
 - **deployment.md** — как Ева запускается, где живёт ⏳ заглушка
 
 ## Что Ева делает (план)
@@ -37,7 +38,7 @@ related_decisions:
 
 - LLM: Claude Sonnet 4.6 через **AWS Bedrock** ([25-integrations/aws-bedrock.md](../../25-integrations/aws-bedrock.md))
 - Канал: Telegram Bot API на унаследованном токене ([25-integrations/telegram.md](../../25-integrations/telegram.md))
-- Память: PostgreSQL (схема в проектировании)
+- Память: PostgreSQL — четыре слоя, схема в [memory-system.md](memory-system.md). Поднимается под Еву отдельно (ADR-013 п. 4)
 - Хост: тот же VPS (см. [70-operations/infrastructure.md](../../70-operations/infrastructure.md))
 
 ## Принципы (из решения)
