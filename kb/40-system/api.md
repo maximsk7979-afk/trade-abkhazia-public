@@ -1,7 +1,7 @@
 ---
 title: API
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-27
 references:
   - database/overview.md
   - frontend.md
@@ -54,6 +54,32 @@ DELETE /api/storage/trade-sales-v1
 ```
 
 POST использует `INSERT ... ON CONFLICT (key) DO UPDATE` — атомарная замена всего значения. Частичных обновлений нет — это причина race condition при одновременной записи разных компонентов.
+
+## ⚠️ Обязательный формат POST: только `{ value: "<json-string>" }`
+
+`trade-api` **не валидирует** payload. Если послать что-то другое — он молча запишет `null` в колонку `value` и **сотрёт существующее значение ключа**. 200 OK возвращается в любом случае.
+
+**Корректно (фронт и Ева — оба так делают):**
+```js
+fetch("/api/storage/trade-cat-clients", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ value: JSON.stringify(clientsArray) })
+});
+```
+
+**Неправильно (молча стирает ключ):**
+```js
+// голый массив без обёртки
+body: JSON.stringify(clientsArray)
+// или строка
+body: JSON.stringify(clientsArray)
+// сервер ответит 200 OK, но KV[key].value станет null
+```
+
+**Прецедент:** 2026-05-27 — Ева писала без обёртки `{value}`, перетёрла справочник клиентов (33 записи утеряны). Контракт был зафиксирован здесь же, но не сверён при реализации. Фикс в `code/eva/src/storage-api.js:34` (коммит после инцидента). См. CHANGELOG 2026-05-27, [GAP-019](../00-meta/gaps.md).
+
+**Правило для CC при имплементации любых клиентов storage-api:** перед коммитом — выполнить round-trip smoke-тест (POST с известным значением → GET → сравнить с исходным). Если не совпало — не деплоить.
 
 ## Что менять под Еву
 
