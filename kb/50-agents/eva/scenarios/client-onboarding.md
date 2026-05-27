@@ -1,7 +1,7 @@
 ---
 title: "Сценарий Евы: онбординг клиента"
 status: in-implementation
-last_updated: 2026-05-24
+last_updated: 2026-05-27
 related_decisions:
   - ../../../90-decisions/ADR-013-eva-agent-architecture.md
   - ../../../90-decisions/ADR-014-client-project-profile.md
@@ -104,8 +104,8 @@ references:
 1. ✅ **Новые поля карточки клиента**: `contactName` («Контактное лицо», обязательное для новых) и `onbStatus` (`Активен`/`На паузе`; миграция на чтении: существующие = `Активен`). **Сделано 2026-05-23** в форме trade_app и хранении (коммит `2403e44`, [CHANGELOG](../../../95-changelog/2026-Q2.md)).
 2. ✅ **Уникальность `n`** — case-insensitive trim. Проверяется в форме trade_app (коммит `2403e44`) И в Еве через инструмент `check_client_name_unique` (Ит.2, 2026-05-23).
 3. ✅ **Инструменты в сервисе Евы** — `code/eva/src/tools/`, Ит.2 (коммит `b305041`): `check_client_name_unique`, `list_active_projects`, `list_segments_for_projects`, `create_client`. Плюс `ask_choice` / `ask_multi_choice` для inline-кнопок (Ит.2.5–2.6).
-4. ⬜ **Генерация и хранение `onbToken`** (вариант A: поле на карточке + скан через data-API; TTL ~14 дней). — Ит.3.
-5. ⬜ **Обработчик `/start onb_<token>`** в сервисе Евы (привязка `tgChatId`/`tg`, гашение токена, знакомство). — Ит.3.
+4. ✅ **Генерация и хранение `onbToken`** — Ит.3 (2026-05-27): `crypto.randomBytes(8).toString("hex")` в `create_client`, TTL 14 дней, поля `onbToken` + `onbTokenExpiresAt` на карточке клиента. `deepLink` возвращается в результате инструмента, системный промпт включает её в отчёт менеджеру.
+5. ✅ **Обработчик `/start onb_<token>`** — Ит.3 (2026-05-27): `handleOnbStart` в `index.js`, идёт ДО whitelist (клиент впервые пишет, его chat_id не в `ALLOWED_CHAT_IDS`). Привязка `tgChatId`/`tg`, гашение токена, приветствие с прозрачностью, notify менеджеру через `bot.sendMessage` на `staff.telegramChatId`. Краевые случаи: not_found / expired / conflict — отдельные ветки.
 6. ⬜ **Фото-инфраструктура** ([GAP-018](../../../00-meta/gaps.md)) — для поля «фото места доставки»; на первом прогоне Ева пропускает поле, к тесту менеджерами — настроить.
 7. ✅ **Идентификация менеджера** по `telegramChatId` — Ит.1, инструмент `whoami_staff`.
 
