@@ -108,12 +108,15 @@ references:
 3. ✅ **Инструменты в сервисе Евы** — `code/eva/src/tools/`, Ит.2 (коммит `b305041`): `check_client_name_unique`, `list_active_projects`, `list_segments_for_projects`, `create_client`. Плюс `ask_choice` / `ask_multi_choice` для inline-кнопок (Ит.2.5–2.6).
 4. ✅ **Генерация и хранение `onbToken`** — Ит.3 (2026-05-27): `crypto.randomBytes(8).toString("hex")` в `create_client`, TTL 14 дней, поля `onbToken` + `onbTokenExpiresAt` на карточке клиента. `deepLink` возвращается в результате инструмента, системный промпт включает её в отчёт менеджеру.
 5. ✅ **Обработчик `/start onb_<token>`** — Ит.3 (2026-05-27): `handleOnbStart` в `index.js`, идёт ДО whitelist (клиент впервые пишет, его chat_id не в `ALLOWED_CHAT_IDS`). Привязка `tgChatId`/`tg`, гашение токена, приветствие с прозрачностью, notify менеджеру через `bot.sendMessage` на `staff.telegramChatId`. Краевые случаи: not_found / expired / conflict — отдельные ветки.
-6. ⬜ **Фото-инфраструктура** — поле 9 «фото места доставки» = база `client-locations` ([GAP-018](../../../00-meta/gaps.md#gap-018), Блок 1 реализации). На текущем рантайме (Ит.3) шаг 9 пропускается. После реализации Блока 1 шаг 9 будет:
-   - после успешного `create_client` выставлять `session.expectingPhoto = {base: "client-locations", entityId: <новый clientId>}`;
-   - в системном промпте — «Спросить менеджера: пришлите фото витрины»;
-   - пришедшее фото обрабатывается диспетчером фото и через handler `client-locations` уходит в `POST /api/photos` → `client.locationPhotos[]`;
-   - менеджер может «пропустить» текстом — `expectingPhoto` сбрасывается, сценарий идёт дальше;
-   - можно прислать несколько фото (одно за другим или альбомом) — все попадут в массив.
+6. ✅ **Фото-инфраструктура** — поле 9 «фото места доставки» = база `client-locations` ([GAP-018](../../../00-meta/gaps.md#gap-018), Блок 1 закрыт 2026-05-30). Реализация:
+   - после успешного `create_client` инструмент выставляет `session.expectingPhoto = {base: "client-locations", entityId: <новый clientId>}` и `session.activeScenario = "client-onboarding"`;
+   - в системном промпте — третий абзац финального отчёта просит фото витрины;
+   - пришедшее фото обрабатывается диспетчером фото и через handler `client-locations` уходит в `POST /api/photos` → `client.locationPhotos[]` (массив объектов `photoMeta`);
+   - **после загрузки** handler шлёт inline-keyboard «📷 Ещё фото» / «✅ Завершить» (callback-префикс `pf:`):
+     - `pf:more` → Ева отвечает «Хорошо, жду ещё фото»; флаг `expectingPhoto` остаётся, можно слать следующие фото (одно за другим или альбомом);
+     - `pf:done` → Ева отвечает «✅ Онбординг завершён. Спасибо!»; сбрасываются `expectingPhoto` и `activeScenario`. Claude **не вызывается** — логика чисто на боте, обход цикла tool calling;
+   - если менеджер вместо кнопок шлёт ещё фото без нажатия — оно тоже попадёт в этого клиента (флаг живёт), это сознательный UX;
+   - если шлёт текст вместо кнопок — Claude увидит как обычное сообщение, реагирует адекватно (но `expectingPhoto` не сбрасывает).
    
    Архитектура фото-инфраструктуры — [ADR-016](../../../90-decisions/ADR-016-photo-infrastructure.md), детали слоёв (а)–(д) — [40-system/photo-infrastructure.md](../../../40-system/photo-infrastructure.md).
 7. ✅ **Идентификация менеджера** по `telegramChatId` — Ит.1, инструмент `whoami_staff`.
