@@ -28,8 +28,8 @@ POST   /api/storage/:key     → { ok: true }   body: { value: "<json-string>" }
 DELETE /api/storage/:key     → { ok: true }
 GET    /api/health           → { status: "ok" }
 
-POST   /api/photos           → { ok, url, photoMeta, duplicate }     multipart, X-Photo-Token
-DELETE /api/photos           → { ok }                                JSON, X-Photo-Token
+POST   /api/photos           → { ok, url, photoMeta, duplicate }     multipart/form-data
+DELETE /api/photos           → { ok }                                JSON body
 ```
 
 Раздел про `/api/photos` — добавлен 2026-05-30 в составе фото-инфраструктуры ([ADR-016](../90-decisions/ADR-016-photo-infrastructure.md)). Полный контракт — [photo-infrastructure.md, слой (в)](photo-infrastructure.md#слой-в--общий-контракт-endpoint-загрузки). Реализация — в Блоке 1 GAP-018.
@@ -38,10 +38,9 @@ DELETE /api/photos           → { ok }                                JSON, X-P
 
 ## Авторизация
 
-- `/api/storage/*`, `/api/health` — **нет авторизации**. CORS `*`. JWT_SECRET и `bcryptjs` лежат в `.env` и зависимостях, но не используются.
-- `/api/photos` — **shared secret** в заголовке `X-Photo-Token` (env `PHOTO_TOKEN`). Слабая защита от случайных запросов; полноценный JWT — после RBAC.
+- `/api/storage/*`, `/api/health`, `/api/photos` — **нет авторизации**. CORS `*`. JWT_SECRET и `bcryptjs` лежат в `.env` и зависимостях, но не используются.
 
-⚠️ **Отсутствие RBAC на storage — блокер для запуска Евы с клиентами и контрагентами.** Задача "Реализовать ролевой доступ" — в [roadmap](../65-roadmap/current.md). После RBAC `/api/photos` тоже перейдёт на JWT-проверку пользовательской сессии.
+⚠️ **Это блокер для запуска Евы с клиентами и контрагентами.** Задача "Реализовать ролевой доступ (RBAC)" — в [roadmap](../65-roadmap/current.md). После RBAC оба endpoint-а одинаково перейдут на JWT-проверку пользовательской сессии.
 
 ## Что делает GET / POST / DELETE
 
@@ -102,9 +101,9 @@ body: JSON.stringify(clientsArray)
 
 Единая точка записи фото для Евы и trade_app. Multipart, валидация всех обязательных полей (`base`, `entityId`, `uploadedBy`, `fileUniqueId`, `file`), сохранение в `/var/www/trade/photos/<base>/<entityId>/<unixTs>_<fileUniqueId>.<ext>`, обновление массива `photoField` на бизнес-сущности через KV.
 
-Полный контракт (поля, валидация, коды ошибок, дедуп по `fileUniqueId`, конфиг `PHOTO_BASES`) — [photo-infrastructure.md, слой (в)](photo-infrastructure.md#слой-в--общий-контракт-endpoint-загрузки). Решение — [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md).
+Полный контракт (поля, валидация, коды ошибок, дедуп по `fileUniqueId`, конфиг `PHOTO_BASES`) — [photo-infrastructure.md, слой (в)](photo-infrastructure.md#слой-в--общий-контракт-endpoint-загрузки). Решение — [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md). Код — `code/trade-api/photos-router.js`.
 
-Контракт **строго валидирует payload** (в отличие от `/api/storage/:key` — урок [GAP-019](../00-meta/gaps.md#gap-019)): отсутствие обязательных полей → `400 BAD_PAYLOAD`, не молча.
+Контракт **строго валидирует payload** (в отличие от `/api/storage/:key` — урок [GAP-019](../00-meta/gaps.md#gap-019)): отсутствие обязательных полей → `400 BAD_PAYLOAD`, не молча. Авторизации нет, как и у `/api/storage` — после RBAC оба endpoint-а перейдут на JWT.
 
 Nginx публикует папку `/var/www/trade/photos/` по URL `https://trade-abkhazia.com/photos/...` с `Cache-Control: public, max-age=31536000, immutable`.
 

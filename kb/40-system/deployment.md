@@ -50,9 +50,9 @@ trade_app_v3.jsx  ──── scp ────►   /var/www/trade/frontend/src
 
 1. **Папка хранения фото:** `/var/www/trade/photos/` (создать с правами на запись для пользователя trade-api / Евы).
 2. **Nginx-конфиг:** добавить `location /photos/ { alias /var/www/trade/photos/; expires 1y; add_header Cache-Control "public, max-age=31536000, immutable"; }` в server-блок `trade-abkhazia.com`.
-3. **`.env` trade-api:** добавить `PHOTO_TOKEN=<32 hex>` (сгенерировать одной командой при реализации, симметрично положить в `.env` Евы и зафиксировать в `~/secrets-trade/credentials.md`).
-4. **`.env` Евы:** `PHOTO_TOKEN=<тот же>`, `TRADE_API_URL=https://trade-abkhazia.com` (или внутренний URL).
-5. **Cron для чистки `/tmp/eva/`:** `find /tmp/eva -mtime +1 -delete` раз в сутки.
+3. **`.env` trade-api:** опционально — `PHOTOS_ROOT=/var/www/trade/photos` и `PHOTOS_PUBLIC_BASE=https://trade-abkhazia.com/photos` (если отличаются от дефолтов в `photos-router.js`). Auth не требуется (см. [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md), решение Блока 1).
+4. **`.env` Евы:** `STORAGE_API_URL=http://localhost:3001/api/storage` уже есть; `/api/photos` берётся из того же базового URL.
+5. **Cron для чистки `/tmp/eva/`:** `find /tmp/eva -mtime +1 -delete` раз в сутки + `find /tmp/api-uploads -mtime +1 -delete`.
 
 Детали по слоям — [photo-infrastructure.md](photo-infrastructure.md).
 

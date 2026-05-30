@@ -26,7 +26,7 @@ date: 2026-05-30
 |---|---|
 | (а) Приём фото из Telegram | Сервис Евы нормализует `RawPhoto`, скачивает в `/tmp/eva/...`, буферизует альбомы по `media_group_id` |
 | (б) Хранение на VPS | Локально, `/var/www/trade/photos/<base>/<entityId>/<unixTs>_<fileUniqueId>.<ext>`, Nginx public с непредсказуемыми именами файлов |
-| (в) Endpoint загрузки | `POST/DELETE /api/photos` на trade-api (multipart, `X-Photo-Token`); единая валидация и запись в KV |
+| (в) Endpoint загрузки | `POST/DELETE /api/photos` на trade-api (multipart); единая валидация payload + проверка entity-exists + запись в KV. **Auth — нет**, симметрично `/api/storage`; после RBAC переходим на JWT |
 | (г) Диспетчер контекста | Универсальный диспетчер выбирает `base` (активный сценарий → inline-кнопки); per-base **handlers** решают `entityId` и постобработку |
 | (д) UI в trade_app | Универсальный компонент `<PhotoGallery>` в карточках; конвенция URL; кэш `Cache-Control: immutable` |
 
@@ -51,7 +51,7 @@ date: 2026-05-30
 
 - Файлы лежат локально на VPS — единственная точка отказа; бэкап нужен ([GAP-016](../00-meta/gaps.md#gap-016)) и архивация ([GAP-017](../00-meta/gaps.md#gap-017)).
 - Доступ через Nginx public — «security through obscurity» (защита непредсказуемым именем файла). Для чувствительных кейсов в будущем потребуется signed URLs или auth-endpoint.
-- Shared secret (`X-Photo-Token`) — слабая защита, до появления RBAC ([roadmap Q3 2026](../65-roadmap/current.md)).
+- На старте endpoint без auth (как `/api/storage`) — до появления RBAC ([roadmap Q3 2026](../65-roadmap/current.md)). Сознательное упрощение: `X-Photo-Token` рассматривался при дизайне, но снят при реализации Блока 1 как театр безопасности (бандл фронта публичен).
 - Состояние сессии Евы (включая `expectingPhoto`) — in-memory; при `pm2 restart eva` теряется. Переезд в Postgres — Ит.4 Евы.
 - KV не транзакционен → теоретически возможна гонка при одновременной правке. Защиту вводим только если выстрелит.
 

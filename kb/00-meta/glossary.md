@@ -657,8 +657,8 @@ Per-base обработчик (`code/eva/src/photo/handlers/<base>.js`) — зн
 ### `PHOTO_BASES`
 Конфиг trade-api (`server.js` или `photo-bases.js`), сопоставляющий имя базы с `{kvKey, photoField, findById, label}`. Точка расширения для новых баз фото без изменения общего пайплайна.
 
-### `X-Photo-Token`
-HTTP-заголовок с shared secret для авторизации `POST/DELETE /api/photos`. Значение — `process.env.PHOTO_TOKEN` (одно на trade-api и на Евы). Слабая защита от сканеров; полноценный JWT — после RBAC.
+### `X-Photo-Token` *(не используется в Блоке 1)*
+HTTP-заголовок с shared secret для авторизации `POST/DELETE /api/photos`. Был зарезервирован при дизайне 2026-05-30, но **снят при реализации Блока 1** — `/api/photos` пошёл без auth, симметрично `/api/storage`. Обоснование: бандл фронта публичен, токен в нём не защита, а театр. См. [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md). После RBAC оба endpoint-а одинаково перейдут на JWT.
 
 ### `expectingPhoto`
 Поле сессии Евы: `{base, entityId}`. Сценарий ставит его перед шагом, на котором ждёт фото; диспетчер контекста видит флаг и проводит пришедшее фото без уточняющего диалога. Сбрасывается после получения.

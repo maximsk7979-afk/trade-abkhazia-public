@@ -229,7 +229,6 @@ Endpoint — на trade-api, контракт в слое (в).
 ```
 POST /api/photos
 Content-Type: multipart/form-data
-X-Photo-Token: <secret>
 ```
 
 Multipart-поля:
@@ -245,21 +244,20 @@ Multipart-поля:
 
 ### Авторизация
 
-Shared secret в заголовке `X-Photo-Token`, сравнивается с `process.env.PHOTO_TOKEN`. Слабая защита от случайных запросов и сканеров.
+**На старте — нет** (симметрично `/api/storage`). При проектировании 2026-05-30 закладывали `X-Photo-Token`, но на реализации (Блок 1) сняли: бандл фронта публичен → токен в нём не даёт реальной защиты, а ломает простоту (плюс отдельный endpoint для раздачи токена браузеру). Симметрия с уже-открытым `/api/storage` важнее эфемерного слоя.
 
-`PHOTO_TOKEN` — длинная случайная строка (~32 байта hex), генерируется при реализации; кладётся в `.env` Евы и trade-api, фиксируется в `~/secrets-trade/credentials.md`.
+Минимальная защита сейчас: валидация payload (включая `BAD_PAYLOAD` при отсутствии полей — фикс [GAP-019](../00-meta/gaps.md#gap-019)) + проверка `entityId` против справочника + непредсказуемые имена файлов в публичной `/photos/`.
 
-При появлении RBAC ([roadmap Q3 2026](../65-roadmap/current.md)) переходим на JWT-проверку пользовательской сессии.
+После RBAC ([roadmap Q3 2026](../65-roadmap/current.md)) — переходим на JWT-проверку пользовательской сессии **для обоих** endpoint-ов одинаково.
 
 ### Валидация (в порядке проверки)
 
-1. `X-Photo-Token` совпадает → иначе `401 {error: "unauthorized", code: "UNAUTHORIZED"}`.
-2. `base` ∈ enum → иначе `400 {code: "BAD_BASE"}`.
-3. Все обязательные поля присутствуют → иначе `400 {code: "BAD_PAYLOAD"}`. **Эта проверка прямо реализует урок [GAP-019](../00-meta/gaps.md#gap-019)** — endpoint не молчит при отсутствии полей.
-4. `file.mimeType` начинается с `image/` → иначе `415 {code: "BAD_MIME"}`.
-5. `file.size` ≤ 25 МБ → иначе `413 {code: "TOO_LARGE"}`.
-6. `entityId` существует в соответствующем KV-ключе → иначе `404 {code: "ENTITY_NOT_FOUND"}`.
-7. Если `fileUniqueId` уже есть в массиве `photoField` сущности → **дедуп, возврат `200 {duplicate: true, url, photoMeta}`** (не ошибка).
+1. `base` ∈ enum → иначе `400 {code: "BAD_BASE"}`.
+2. Все обязательные поля присутствуют (`base`, `entityId`, `uploadedBy`, `fileUniqueId`, `file`) → иначе `400 {code: "BAD_PAYLOAD"}`. **Эта проверка прямо реализует урок [GAP-019](../00-meta/gaps.md#gap-019)** — endpoint не молчит при отсутствии полей.
+3. `file.mimeType` начинается с `image/` → иначе `415 {code: "BAD_MIME"}`.
+4. `file.size` ≤ 25 МБ → иначе `413 {code: "TOO_LARGE"}`.
+5. `entityId` существует в соответствующем KV-ключе → иначе `404 {code: "ENTITY_NOT_FOUND"}`.
+6. Если `fileUniqueId` уже есть в массиве `photoField` сущности → **дедуп, возврат `200 {duplicate: true, url, photoMeta}`** (не ошибка).
 
 ### Ответы
 
@@ -285,7 +283,7 @@ Shared secret в заголовке `X-Photo-Token`, сравнивается с
 {
   "ok": false,
   "error": "human-readable",
-  "code": "BAD_BASE | BAD_PAYLOAD | BAD_MIME | TOO_LARGE | ENTITY_NOT_FOUND | UNAUTHORIZED"
+  "code": "BAD_BASE | BAD_PAYLOAD | BAD_MIME | TOO_LARGE | ENTITY_NOT_FOUND"
 }
 ```
 
@@ -293,7 +291,7 @@ Shared secret в заголовке `X-Photo-Token`, сравнивается с
 
 ```
 DELETE /api/photos
-Headers: X-Photo-Token, Content-Type: application/json
+Headers: Content-Type: application/json
 Body: { "base": "...", "entityId": "...", "fileUniqueId": "..." }
 ```
 
@@ -352,10 +350,10 @@ Read-modify-write на KV-ключе через существующий API. У
 ```
 Ева (или фронт trade_app)
   ↓ POST /api/photos
-  Headers: X-Photo-Token, Content-Type: multipart/form-data
+  Content-Type: multipart/form-data
   Body: {base, entityId, uploadedBy, fileUniqueId, caption?, file}
   ↓
-trade-api: validate {token, base, payload, mime, size, entity-exists}
+trade-api: validate {base, payload, mime, size, entity-exists}
   ↓ если fileUniqueId уже в массиве → return 200 {duplicate: true, url}
   ↓ image-size(file) → {w, h}
   ↓ mkdir -p /var/www/trade/photos/<base>/<entityId>/
