@@ -1,7 +1,7 @@
 ---
 title: Карта базы знаний
 status: active
-last_updated: 2026-05-22
+last_updated: 2026-05-30
 ---
 
 # Карта базы знаний (INDEX)
@@ -67,6 +67,7 @@ Telegram, AWS Bedrock, Anthropic API, Google Sheets, Yandex Maps.
 Frontend (`trade_app_v3.jsx`), API, БД, физический формат данных, деплой.
 
 - [architecture.md](40-system/architecture.md), [frontend.md](40-system/frontend.md), [api.md](40-system/api.md), [deployment.md](40-system/deployment.md)
+- [photo-infrastructure.md](40-system/photo-infrastructure.md) — фото-инфраструктура (draft, разбор по слоям с 2026-05-30)
 - database/, data-formats/
 
 ### 50-agents/ — ИИ-агенты
@@ -106,6 +107,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-013](90-decisions/ADR-013-eva-agent-architecture.md) — архитектура Евы (агентный рантайм, четырёхслойная память, навыки, CRM)
 - [ADR-014](90-decisions/ADR-014-client-project-profile.md) — проектный профиль клиента, справочник сегментов, проектная привязка товара
 - [ADR-015](90-decisions/ADR-015-role-process-eva-structure.md) — структура роль ↔ процесс ↔ сценарий Евы ↔ инструкция; диагностика влияния изменений
+- [ADR-016](90-decisions/ADR-016-photo-infrastructure.md) — фото-инфраструктура: единый пайплайн (5 слоёв) + 4 независимых базы + расширяемость
 
 ### 95-changelog/ — История изменений
 - [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал
