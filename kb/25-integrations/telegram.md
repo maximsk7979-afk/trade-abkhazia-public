@@ -1,10 +1,11 @@
 ---
 title: Telegram Bot API
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-30
 references:
   - ../50-agents/eva/deployment.md
   - ../70-operations/infrastructure.md
+  - ../40-system/photo-infrastructure.md
 referenced_by: []
 ---
 
@@ -41,6 +42,12 @@ NOTIFY_CHAT_IDS=118206343,1719753990
 - `1719753990` — Нелли (@Nelli2023N)
 
 Используется при создании нового клиента, других системных событиях.
+
+## Приём фото от пользователей
+
+Помимо текста и команд, Ева принимает фото — как `msg.photo` (сжатое из галереи/камеры) и как `msg.document` с `mime ~ "image/*"` (без сжатия, для отгрузочных накладных). Альбомы (`media_group_id`) буферизуются ~700 мс. Лимит скачивания через Bot API — 20 МБ.
+
+Слой приёма (`code/eva/src/photo/raw-photo.js` + `album-buffer.js`) — слой (а) фото-инфраструктуры ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md), [40-system/photo-infrastructure.md](../../40-system/photo-infrastructure.md)). После приёма фото попадает в диспетчер контекста и handler нужной базы.
 
 ## Что делать при отказе
 

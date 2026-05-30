@@ -1,16 +1,18 @@
 ---
 title: "Сценарий Евы: онбординг клиента"
 status: in-implementation
-last_updated: 2026-05-27
+last_updated: 2026-05-30
 related_decisions:
   - ../../../90-decisions/ADR-013-eva-agent-architecture.md
   - ../../../90-decisions/ADR-014-client-project-profile.md
   - ../../../90-decisions/ADR-015-role-process-eva-structure.md
+  - ../../../90-decisions/ADR-016-photo-infrastructure.md
 references:
   - ../vision.md
   - ../architecture.md
   - ../memory-system.md
   - ../../../30-roles/to-be/sales-manager/processes/client-onboarding.md
+  - ../../../40-system/photo-infrastructure.md
 ---
 
 # Сценарий: онбординг клиента
@@ -106,7 +108,14 @@ references:
 3. ✅ **Инструменты в сервисе Евы** — `code/eva/src/tools/`, Ит.2 (коммит `b305041`): `check_client_name_unique`, `list_active_projects`, `list_segments_for_projects`, `create_client`. Плюс `ask_choice` / `ask_multi_choice` для inline-кнопок (Ит.2.5–2.6).
 4. ✅ **Генерация и хранение `onbToken`** — Ит.3 (2026-05-27): `crypto.randomBytes(8).toString("hex")` в `create_client`, TTL 14 дней, поля `onbToken` + `onbTokenExpiresAt` на карточке клиента. `deepLink` возвращается в результате инструмента, системный промпт включает её в отчёт менеджеру.
 5. ✅ **Обработчик `/start onb_<token>`** — Ит.3 (2026-05-27): `handleOnbStart` в `index.js`, идёт ДО whitelist (клиент впервые пишет, его chat_id не в `ALLOWED_CHAT_IDS`). Привязка `tgChatId`/`tg`, гашение токена, приветствие с прозрачностью, notify менеджеру через `bot.sendMessage` на `staff.telegramChatId`. Краевые случаи: not_found / expired / conflict — отдельные ветки.
-6. ⬜ **Фото-инфраструктура** ([GAP-018](../../../00-meta/gaps.md)) — для поля «фото места доставки»; на первом прогоне Ева пропускает поле, к тесту менеджерами — настроить.
+6. ⬜ **Фото-инфраструктура** — поле 9 «фото места доставки» = база `client-locations` ([GAP-018](../../../00-meta/gaps.md#gap-018), Блок 1 реализации). На текущем рантайме (Ит.3) шаг 9 пропускается. После реализации Блока 1 шаг 9 будет:
+   - после успешного `create_client` выставлять `session.expectingPhoto = {base: "client-locations", entityId: <новый clientId>}`;
+   - в системном промпте — «Спросить менеджера: пришлите фото витрины»;
+   - пришедшее фото обрабатывается диспетчером фото и через handler `client-locations` уходит в `POST /api/photos` → `client.locationPhotos[]`;
+   - менеджер может «пропустить» текстом — `expectingPhoto` сбрасывается, сценарий идёт дальше;
+   - можно прислать несколько фото (одно за другим или альбомом) — все попадут в массив.
+   
+   Архитектура фото-инфраструктуры — [ADR-016](../../../90-decisions/ADR-016-photo-infrastructure.md), детали слоёв (а)–(д) — [40-system/photo-infrastructure.md](../../../40-system/photo-infrastructure.md).
 7. ✅ **Идентификация менеджера** по `telegramChatId` — Ит.1, инструмент `whoami_staff`.
 
 ### Полномочия
@@ -133,5 +142,7 @@ references:
 - [vision.md](../vision.md) — характер, прозрачность, границы
 - [memory-system.md](../memory-system.md) — слои A/B, контур обучения
 - [ADR-014](../../../90-decisions/ADR-014-client-project-profile.md) — поля карточки, сегменты, проектные блоки
+- [ADR-016](../../../90-decisions/ADR-016-photo-infrastructure.md) — фото-инфраструктура (поле 9)
+- [40-system/photo-infrastructure.md](../../../40-system/photo-infrastructure.md) — детальная спецификация по слоям
 - [order-intake.md](order-intake.md) — следующий сценарий: приём заявки (проектируется)
 </content>

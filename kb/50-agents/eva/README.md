@@ -1,10 +1,11 @@
 ---
 title: Eva — ИИ-агент
 status: design
-last_updated: 2026-05-22
+last_updated: 2026-05-30
 related_decisions:
   - ../../90-decisions/ADR-005-eva-replaces-bot.md
   - ../../90-decisions/ADR-013-eva-agent-architecture.md
+  - ../../90-decisions/ADR-016-photo-infrastructure.md
 ---
 
 # Eva — ИИ-агент
@@ -18,12 +19,14 @@ related_decisions:
 ## Что внутри
 
 - **vision.md** — видение, характер, принципы (фундамент системного промпта) ✅
-- **architecture.md** — компоненты, потоки, навыки ✅
+- **architecture.md** — компоненты, потоки, навыки, фото-модуль ✅
 - **memory-system.md** — четыре слоя памяти + схема БД ✅
 - **tools/** — контракты инструментов ⏳ в проектировании
 - **prompts/** — промпты по ролям (system-base + role-specific) ⏳
 - **scenarios/** — бизнес-сценарии: [онбординг клиента](scenarios/client-onboarding.md) ✅, приём заявки ⏳, напоминания ⏳
 - **deployment.md** — как Ева запускается, где живёт ⏳ заглушка
+
+**Фото-модуль Евы** (`code/eva/src/photo/`) — приём фото из Telegram, диспетчер контекста, per-base handlers. Архитектура: [ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md), детали: [40-system/photo-infrastructure.md](../../40-system/photo-infrastructure.md). Реализация — Блок 1 [GAP-018](../../00-meta/gaps.md#gap-018).
 
 ## Что Ева делает (план)
 

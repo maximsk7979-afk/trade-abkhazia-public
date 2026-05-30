@@ -1,11 +1,12 @@
 ---
 title: Архитектура текущей системы
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-30
 references:
   - frontend.md
   - api.md
   - database/overview.md
+  - photo-infrastructure.md
   - ../70-operations/infrastructure.md
 referenced_by: []
 ---
@@ -51,16 +52,17 @@ referenced_by: []
 | Компонент | Описание | Файл |
 |---|---|---|
 | Frontend | Single-file React SPA, ~15 326 строк | [frontend.md](frontend.md) |
-| API | Express 5, 4 эндпоинта, 50 строк кода | [api.md](api.md) |
+| API | Express 5, 6 эндпоинтов (`/api/storage/*` + `/api/photos`) | [api.md](api.md) |
 | БД | PostgreSQL, 1 таблица KV-store | [database/overview.md](database/overview.md) |
+| Файлы фото | `/var/www/trade/photos/<base>/<entityId>/...`, Nginx public | [photo-infrastructure.md](photo-infrastructure.md) |
 | Бот (отключён) | `bot_expeditor.js`, замещается Евой | (архив) |
-| Eva | В проектировании | [`50-agents/eva/`](../50-agents/eva/) |
+| Eva | Рантайм в проде (онбординг клиента); фото-модуль в реализации | [`50-agents/eva/`](../50-agents/eva/) |
 
 ## Потоки данных
 
-- **Frontend ↔ API**: только через 3 эндпоинта `/api/storage/:key` (GET/POST/DELETE). Фронт читает/пишет JSON-блобы под именованными ключами.
+- **Frontend ↔ API**: через `/api/storage/:key` (GET/POST/DELETE) для JSON-блобов и `/api/photos` (POST/DELETE) для загрузки фото. Фронт читает фото напрямую по `<img src="https://trade-abkhazia.com/photos/...">` (Nginx public).
 - **Бот (когда был активен) ↔ API**: ходил туда же. Бот ↔ Bedrock — отдельный SDK-канал.
-- **Eva ↔ API**: будет ходить туда же или, возможно, через специализированный API (проектируется).
+- **Eva ↔ API**: пишет через `/api/storage/*` (карточки, продажи и т.д.) и через `/api/photos` (фото). Фото из Telegram качаются в `/tmp/eva/...`, затем уезжают в endpoint trade-api. См. [photo-infrastructure.md](photo-infrastructure.md).
 
 ## Принципиальные особенности (и что менять под Еву)
 
@@ -81,4 +83,5 @@ referenced_by: []
 ## Связанные документы
 
 - [70-operations/infrastructure.md](../70-operations/infrastructure.md) — где это запущено
+- [photo-infrastructure.md](photo-infrastructure.md) — фото-инфраструктура (5 слоёв, 4 базы фото)
 - [25-integrations/](../25-integrations/) — внешние сервисы

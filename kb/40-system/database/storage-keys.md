@@ -1,9 +1,10 @@
 ---
 title: Ключи storage
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-30
 references:
   - overview.md
+  - ../photo-infrastructure.md
 referenced_by:
   - ../frontend.md
 ---
@@ -73,3 +74,16 @@ referenced_by:
 - **Справочники** хранят **массив** объектов
 
 ⚠️ POST в `/api/storage/:key` **переписывает всё значение** — частичных обновлений нет.
+
+## Фото — где хранятся
+
+Фотографии **не** хранятся в `app_storage` — это файлы на VPS `/var/www/trade/photos/<base>/<entityId>/<unixTs>_<fileUniqueId>.<ext>`. На бизнес-сущности (клиент / Sale / SKU / Purchase) хранится **массив объектов `photoMeta`** в соответствующем `photoField`:
+
+| База фото | KV-ключ | Поле на сущности |
+|---|---|---|
+| client-locations | `trade-cat-clients` | `locationPhotos[]` |
+| shipments | `trade-sales-v1` | `shipmentPhotos[]` |
+| skus | `trade-cat-skus` | `photos[]` |
+| purchase-offers | `trade-purchases-v1` (или `trade-trips-v8`) | `purchasePhotos[]` |
+
+Управление — endpoint `POST/DELETE /api/photos` (валидирует payload, в отличие от `/api/storage/:key` — см. [GAP-019](../../00-meta/gaps.md#gap-019)). Подробности — [photo-infrastructure.md](../photo-infrastructure.md), [ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md).

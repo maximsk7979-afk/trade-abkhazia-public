@@ -1,11 +1,13 @@
 ---
 title: Purchase — JSON-формат закупки вне рейса
 status: active
-last_updated: 2026-05-21
+last_updated: 2026-05-30
 references:
   - ../../90-decisions/ADR-009-multitenancy-projects.md
   - ../../90-decisions/ADR-010-invoice-entity.md
+  - ../../90-decisions/ADR-016-photo-infrastructure.md
   - ../database/storage-keys.md
+  - ../photo-infrastructure.md
   - batch.md
 referenced_by: []
 ---
@@ -69,6 +71,7 @@ referenced_by: []
 | `supplierPayments[]` | Оплаты поставщикам `{supId, amount, paidBy}` |
 | `cm` | Комментарий |
 | `history[]` | Журнал |
+| `purchasePhotos[]` | (опционально, добавляется при реализации [GAP-022](../../00-meta/gaps.md#gap-022)) Массив объектов `photoMeta` — фото товаров с закупки для рассылок клиентам. База `purchase-offers` фото-инфраструктуры ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). Формат — см. [client.md](client.md#объект-photometa-элемент-массива-locationphotos). Финальная привязка (`Purchase` vs `Trip`) — решается при дизайне GAP-022 |
 
 ### Позиция `items[]`
 
@@ -113,6 +116,10 @@ price, pu, fw, tc}`. `pu` — `"кг"` (по весу брутто) или `"т�
 
 `Invoice.linkedTo = {type:"purchase", id:"ЗК-NNN"}` — реализуется в Слое В
 (сущность Invoice, [ADR-010](../../90-decisions/ADR-010-invoice-entity.md)).
+
+## Связь с фото-инфраструктурой
+
+При реализации [GAP-022](../../00-meta/gaps.md#gap-022) — добавится поле `purchasePhotos[]` (массив `photoMeta`) под фото товаров с закупки для рассылок клиентам. База `purchase-offers` фото-инфраструктуры ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). На стадии дизайна — обсудить, к чему привязывать фото в случае рейса (поле в `Trip` или общая модель «предложение закупки»).
 
 ## UI
 

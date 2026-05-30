@@ -1,12 +1,14 @@
 ---
 title: Sale — JSON-формат продажи
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-30
 references:
   - ../../20-domain/data-model/entities.md
   - ../../20-domain/sales.md
   - ../database/storage-keys.md
+  - ../photo-infrastructure.md
   - ../../90-decisions/ADR-007-sales-canonical-model.md
+  - ../../90-decisions/ADR-016-photo-infrastructure.md
 referenced_by: []
 ---
 
@@ -50,6 +52,7 @@ referenced_by: []
 | `status` | string | да | Статус из жизненного цикла |
 | `cm` | string | нет | Свободный комментарий |
 | `history` | array | да | История смен статуса: `[{from, to, at}]` |
+| `shipmentPhotos` | array | нет | Массив объектов `photoMeta` — фото **отгрузочных** накладных (база `shipments` фото-инфраструктуры, [ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). Загружает экспедитор/менеджер во время доставки через Еву; Ева распознаёт накладную и создаёт/обновляет эту запись Sale ([GAP-020](../../00-meta/gaps.md#gap-020)). Не путать с **входящими** накладными от поставщиков ([ADR-010](../../90-decisions/ADR-010-invoice-entity.md), Слой В) |
 
 ## ПС (sale-direct) — формат
 
@@ -191,3 +194,4 @@ referenced_by: []
 ## История
 
 - 2026-04-28: Канонизирован формат ([ADR-007](../../90-decisions/ADR-007-sales-canonical-model.md)). Удалены упоминания мёртвого `sale-delivery` и legacy storage `trade-orders-v4`.
+- 2026-05-30: Добавлено поле `shipmentPhotos[]` (массив `photoMeta`) под фото-инфраструктуру ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). Формат `photoMeta` единый — [client.md](client.md#объект-photometa-элемент-массива-locationphotos). Реализация — в составе GAP-020 (после Блока 1 GAP-018).

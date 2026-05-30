@@ -1,12 +1,13 @@
 ---
 title: Менеджер продаж (TO-BE, с Евой)
 status: to-be
-last_updated: 2026-05-22
+last_updated: 2026-05-30
 references:
   - ../../README.md
   - ../../../90-decisions/ADR-013-eva-agent-architecture.md
   - ../../../90-decisions/ADR-014-client-project-profile.md
   - ../../../90-decisions/ADR-015-role-process-eva-structure.md
+  - ../../../90-decisions/ADR-016-photo-infrastructure.md
 referenced_by: []
 ---
 
@@ -36,6 +37,7 @@ referenced_by: []
 2. Приём и оформление заявок клиента.
 3. Контроль баланса/долга своих клиентов, напоминания (частично делегируется Еве — CRM-слой).
 4. Реакция на эскалации Евы по своим клиентам, перехват диалога при необходимости.
+5. **Загрузка фото витрин/входов клиентов** через Еву — на онбординге (база `client-locations` фото-инфраструктуры, [ADR-016](../../../90-decisions/ADR-016-photo-infrastructure.md)). По мере появления нужды — фото отгрузочных накладных и фото товаров (базы `shipments`, `skus`, см. [GAP-020](../../../00-meta/gaps.md#gap-020) / [GAP-021](../../../00-meta/gaps.md#gap-021)).
 
 ### Эпизодические
 - Переназначение клиента другому менеджеру (через веб-приложение).
@@ -77,6 +79,7 @@ referenced_by: []
 - [ADR-013](../../../90-decisions/ADR-013-eva-agent-architecture.md) — архитектура Евы
 - [ADR-014](../../../90-decisions/ADR-014-client-project-profile.md) — проектный профиль клиента (поля карточки)
 - [ADR-015](../../../90-decisions/ADR-015-role-process-eva-structure.md) — структура роль/процесс/Ева/инструкция
+- [ADR-016](../../../90-decisions/ADR-016-photo-infrastructure.md) — фото-инфраструктура (как менеджер грузит фото через Еву)
 - [Должностная инструкция менеджера продаж](../../../80-instructions/for-team/sales-manager.md) — вторичный документ, перегенерируется из роли + процессов
 - [vision.md](../../../50-agents/eva/vision.md) — характер и принципы Евы
 </content>

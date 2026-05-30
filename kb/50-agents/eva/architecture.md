@@ -1,9 +1,10 @@
 ---
 title: Eva — архитектура
 status: design
-last_updated: 2026-05-22
+last_updated: 2026-05-30
 related_decisions:
   - ../../90-decisions/ADR-013-eva-agent-architecture.md
+  - ../../90-decisions/ADR-016-photo-infrastructure.md
 ---
 
 # Eva — архитектура
@@ -65,12 +66,33 @@ Claude (Sonnet для диалога; путь — Bedrock или прямой A
 - **Эскалация**: `escalate_to_manager`.
 - **Память**: чтение/запись слоёв A и B.
 
-Бизнес-данные идут через **data-API** (`/api/storage/<key>`), тот же, что у `trade_app`.
+Бизнес-данные идут через **data-API** (`/api/storage/<key>`), тот же, что у `trade_app`. Фотографии — через отдельный endpoint `/api/photos` ([photo-infrastructure.md](../../40-system/photo-infrastructure.md), [ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)).
 
-### 6. CRM-слой (проактив)
+### 6. Фото-модуль (`code/eva/src/photo/`)
+
+Подсистема приёма и обработки фотографий из Telegram. Реализует слои (а), (г) фото-инфраструктуры ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)):
+
+```
+code/eva/src/photo/
+  raw-photo.js              ← слой (а): скачивание + нормализация в RawPhoto
+  album-buffer.js           ← слой (а): буферизация альбомов по media_group_id
+  dispatcher.js             ← слой (г): выбор base (активный сценарий → inline-кнопки)
+  upload-client.js          ← слой (в): обёртка POST /api/photos
+  handlers/
+    client-locations.js     ← GAP-018
+    shipments.js            ← GAP-020 (с распознаванием накладной)
+    skus.js                 ← GAP-021
+    purchase-offers.js      ← GAP-022
+```
+
+Сессия Евы хранит `activeScenario` и `expectingPhoto = {base, entityId}`: сценарий-владелец фото-ожидания ставит флаг, диспетчер видит и проводит фото без уточняющего диалога. После Ит.4 — в Postgres (`eva_sessions`).
+
+Связи: сценарии (`scenarios/<name>.md`) используют флаг `expectingPhoto`. Например, [client-onboarding](scenarios/client-onboarding.md) шаг 9 ставит `{base: "client-locations", entityId: <создаваемый клиент>}`.
+
+### 7. CRM-слой (проактив)
 Планировщик (cron) с правилами: напоминание о рейсе (по ассортименту клиента из слоя B), ре-активация, напоминание о долге, дайджест менеджеру. Эскалация — `escalate_to_manager` из диалога (жалоба, торг сверх полномочий, аномалия, просьба клиента) → алерт менеджеру + ссылка на переписку + возможность перехвата.
 
-### 7. UI для сотрудников
+### 8. UI для сотрудников
 Модуль «📨 CRM / Переписки» в `trade_app`: список клиентов → лента диалога (A) → карточка памяти (B) → перехват + лента напоминаний менеджеру.
 
 ## Поток: входящее сообщение клиента
@@ -96,8 +118,10 @@ Claude (Sonnet для диалога; путь — Bedrock или прямой A
 
 ## Связанные документы
 
-- [ADR-013](../../90-decisions/ADR-013-eva-agent-architecture.md) — решение
+- [ADR-013](../../90-decisions/ADR-013-eva-agent-architecture.md) — решение по агенту
+- [ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md) — фото-инфраструктура (5 слоёв)
 - [memory-system.md](memory-system.md) — память и схема БД
 - [vision.md](vision.md) — характер и принципы
 - [scenarios/](scenarios/) — бизнес-сценарии (в проектировании)
 - [tools/](tools/) — контракты инструментов (в проектировании)
+- [40-system/photo-infrastructure.md](../../40-system/photo-infrastructure.md) — детали фото-модуля

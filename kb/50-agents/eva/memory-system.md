@@ -1,9 +1,10 @@
 ---
 title: Eva — система памяти
 status: design
-last_updated: 2026-05-22
+last_updated: 2026-05-30
 related_decisions:
   - ../../90-decisions/ADR-013-eva-agent-architecture.md
+  - ../../90-decisions/ADR-016-photo-infrastructure.md
 ---
 
 # Eva — система памяти
@@ -87,7 +88,16 @@ eva_escalations         -- эскалации менеджеру
   reason        text
   status        text            -- 'open' | 'taken' | 'closed'
   created_at    timestamptz
+
+eva_sessions            -- in-memory сейчас; в Postgres c Ит.4
+  chat_id          text pk
+  active_scenario  text            -- 'client-onboarding' | null
+  expecting_photo  jsonb           -- {base, entityId} | null (фото-инфраструктура, ADR-016)
+  state            jsonb           -- доп. контекст текущего сценария (slot-filling и т.п.)
+  updated_at       timestamptz
 ```
+
+> Поле `expecting_photo` используется [диспетчером контекста фото-инфраструктуры](../../40-system/photo-infrastructure.md#слой-г--диспетчер-контекста) ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). Сценарий-владелец фото-ожидания ставит флаг перед шагом с фото; диспетчер видит и проводит пришедшее фото без уточняющего диалога. Сбрасывается после получения.
 
 ## Кэширование контекста
 

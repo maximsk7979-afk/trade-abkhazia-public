@@ -1,7 +1,7 @@
 ---
 title: Словарь терминов
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-30
 ---
 
 # Словарь терминов (Glossary)
@@ -621,3 +621,47 @@ Architecture Decision Record. Файл `ADR-NNN-имя.md` в `kb/90-decisions/`
 Типовая бизнес-задача, которую агент решает по заранее описанным шагам. Например: распознать накладную, создать нового клиента, оформить возврат за брак. Каждый сценарий описан в [50-agents/eva/scenarios/](../50-agents/eva/) с шагами, инструментами и условиями.
 
 Полное описание: [50-agents/eva/scenarios/](../50-agents/eva/) (заглушка).
+
+### Активный сценарий (`activeScenario`)
+Текущий выполняемый сценарий Евы для конкретного `chatId`. Хранится в сессии Евы (`Map<chatId, session>`, in-memory; миграция в Postgres — Ит.4). Используется, в частности, диспетчером контекста фото: если активный сценарий **ожидает фото** (поле `session.expectingPhoto = {base, entityId}`), пришедшее фото уходит в этот сценарий без уточняющего диалога.
+
+См. [40-system/photo-infrastructure.md](../40-system/photo-infrastructure.md), слой (г).
+
+---
+
+## 9. Фото-инфраструктура
+
+> Принципиальные термины из [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md). Полное описание — [40-system/photo-infrastructure.md](../40-system/photo-infrastructure.md).
+
+### Фото-инфраструктура
+Единый пайплайн загрузки, хранения, привязки и просмотра фотографий: 5 слоёв (а→д) + 4 независимых базы фотографий ([GAP-018](gaps.md#gap-018), [GAP-020](gaps.md#gap-020), [GAP-021](gaps.md#gap-021), [GAP-022](gaps.md#gap-022)). Принципиальная архитектура — [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md). Детали реализации — [40-system/photo-infrastructure.md](../40-system/photo-infrastructure.md).
+
+### База фотографий
+Логически независимая группа фотографий с одинаковой семантикой привязки. Сейчас четыре базы: `client-locations` (витрины клиентов), `shipments` (отгрузочные накладные), `skus` (фото товаров в каталоге), `purchase-offers` (фото с закупок для рассылок). Расширяемо — пункт 5 разбора 2026-05-30.
+
+### `photoMeta`
+Объект-запись о фотографии в массиве `photoField` на бизнес-сущности: `{url, uploadedBy, uploadedAt, caption, fileUniqueId, size, width, height}`. Формат **одинаков** для всех баз. Полная спецификация — в [client.md](../40-system/data-formats/client.md#объект-photometa-элемент-массива-locationphotos).
+
+### `photoField`
+Поле на бизнес-сущности, в котором лежит массив `photoMeta`. По базам: `client.locationPhotos[]`, `sale.shipmentPhotos[]`, `sku.photos[]`, `purchase.purchasePhotos[]` (или `trip.purchasePhotos[]`).
+
+### `RawPhoto`
+Промежуточная структура слоя (а) фото-инфраструктуры: нормализованное представление пришедшего из Telegram сообщения-фото (file_id, file_unique_id, локальный путь в `/tmp/eva/...`, sender, caption, mediaGroupId). Из неё диспетчер контекста собирает данные для endpoint `/api/photos`.
+
+### Диспетчер контекста (фото)
+Компонент сервиса Евы (слой «г» фото-инфраструктуры), решающий, к какой `base` и `entityId` привязать пришедший `RawPhoto`. Активный сценарий имеет приоритет, иначе — inline-кнопки выбора базы. Дальше передаёт работу handler'у базы.
+
+### Handler базы (фото)
+Per-base обработчик (`code/eva/src/photo/handlers/<base>.js`) — знает, как достать `entityId` для своей базы и что делать после загрузки (например, для `shipments` запускать распознавание накладной). Новая база = новый handler + строка в конфиге `PHOTO_BASES`.
+
+### `PHOTO_BASES`
+Конфиг trade-api (`server.js` или `photo-bases.js`), сопоставляющий имя базы с `{kvKey, photoField, findById, label}`. Точка расширения для новых баз фото без изменения общего пайплайна.
+
+### `X-Photo-Token`
+HTTP-заголовок с shared secret для авторизации `POST/DELETE /api/photos`. Значение — `process.env.PHOTO_TOKEN` (одно на trade-api и на Евы). Слабая защита от сканеров; полноценный JWT — после RBAC.
+
+### `expectingPhoto`
+Поле сессии Евы: `{base, entityId}`. Сценарий ставит его перед шагом, на котором ждёт фото; диспетчер контекста видит флаг и проводит пришедшее фото без уточняющего диалога. Сбрасывается после получения.
+
+### `<PhotoGallery>` (UI-компонент)
+Универсальный React-подобный компонент в trade_app для всех четырёх баз. Пропсы: `photos`, `editable`, `onUpload`, `onDelete`. Внутри — горизонтальная полоса миниатюр + lightbox при клике. Расширяемость на стороне UI — одна строка в любой секции карточки.

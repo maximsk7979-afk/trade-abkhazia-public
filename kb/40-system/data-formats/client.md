@@ -1,11 +1,13 @@
 ---
 title: Client — JSON-формат клиента
 status: active
-last_updated: 2026-05-23
+last_updated: 2026-05-30
 references:
   - ../database/storage-keys.md
   - ./sale.md
+  - ../photo-infrastructure.md
   - ../../90-decisions/ADR-014-client-project-profile.md
+  - ../../90-decisions/ADR-016-photo-infrastructure.md
   - ../../30-roles/to-be/sales-manager/processes/client-onboarding.md
 referenced_by: []
 ---
@@ -44,7 +46,18 @@ referenced_by: []
   "tg": "@arshak",
   "tgChatId": "123456789",
   "ynavUrl": "https://yandex.ru/maps/...",
-  "locationPhotos": ["https://trade-abkhazia.com/photos/clients/К-026/loc-1.jpg"],
+  "locationPhotos": [
+    {
+      "url": "https://trade-abkhazia.com/photos/client-locations/К-026/1748600096_AQADXX.jpg",
+      "uploadedBy": "С-006",
+      "uploadedAt": "2026-05-30T12:34:56Z",
+      "caption": "Витрина со стороны входа",
+      "fileUniqueId": "AQADXX",
+      "size": 245678,
+      "width": 1280,
+      "height": 960
+    }
+  ],
   "managerId": "С-006"
 }
 ```
@@ -62,7 +75,7 @@ referenced_by: []
 | `tg` | string | нет | Telegram username (`@username`). Заполняется автоматически при активации deep-link |
 | `tgChatId` | string | нет | Chat ID для бота/Евы. Заполняется автоматически при активации deep-link |
 | `ynavUrl` | string | нет | URL точки в Яндекс.Навигаторе (для водителей) |
-| `locationPhotos` | array | нет | Массив URL фото места доставки (витрина, вход, ориентир). Заполняется через Еву после запуска фото-инфраструктуры ([GAP-018](../../00-meta/gaps.md)). До этого можно вписать ссылки вручную через форму |
+| `locationPhotos` | array | нет | Массив объектов `photoMeta` (URL фото входа/витрины + метаданные). База `client-locations` фото-инфраструктуры ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). Заполняется через Еву (шаг 9 онбординга) или через форму trade_app (после Блока 1 GAP-018). Формат `photoMeta` — см. ниже |
 | `managerId` | string | нет | Закреплённый менеджер продаж (`С-XXX`, роль `sales_manager`). При создании продажи копируется в `sale.managerId` |
 
 ### Блок проекта (`projects[]`)
@@ -75,6 +88,20 @@ referenced_by: []
 | `saleType` | string | `ps` (со склада) / `ds` (доставка) — тип продажи в этом проекте. Пустая строка допустима |
 
 См. правила хелперов `getClientProjects` и `getClientPriceLevel(client, projectId)` в [ADR-014](../../90-decisions/ADR-014-client-project-profile.md) §4. На онбординге сегмент/уровень цены/тип продажи задаются **одним ответом** и пишутся во все проектные блоки одинаково (см. [процесс client-onboarding](../../30-roles/to-be/sales-manager/processes/client-onboarding.md)).
+
+### Объект `photoMeta` (элемент массива `locationPhotos[]`)
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `url` | string | Публичный URL `https://trade-abkhazia.com/photos/client-locations/<clientId>/<unixTs>_<fileUniqueId>.<ext>` |
+| `uploadedBy` | string | `staffId` (С-NNN) загрузившего |
+| `uploadedAt` | string | ISO-дата загрузки |
+| `caption` | string | Подпись (опционально; берётся из Telegram caption или из формы trade_app) |
+| `fileUniqueId` | string | Для дедупа (из Telegram `file_unique_id` или UUID4 для веб-формы) |
+| `size` | number | Байты |
+| `width`, `height` | number | Пиксели (0 если не удалось определить — например, HEIC) |
+
+Формат `photoMeta` **одинаков** для всех четырёх баз фото ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)): `Sale.shipmentPhotos[]`, `Sku.photos[]`, `Purchase.purchasePhotos[]` устроены так же. Источник истины — [photo-infrastructure.md](../photo-infrastructure.md), слой (б).
 
 ## Legacy-поля (для обратной совместимости при чтении)
 
@@ -117,3 +144,4 @@ referenced_by: []
 - 2026-04-28: Формат описан в kb/ (плоская карточка).
 - 2026-05-22: ADR-014 — проектные блоки `projects[]`, `locationPhotos[]` (К3, коммиты `a3472d2`, `417dc3f`, `43cfe4d`).
 - 2026-05-23: Поля онбординга `contactName`, `onbStatus` + уникальность `n` (коммит `2403e44`).
+- 2026-05-30: `locationPhotos[]` переоформлен из массива URL в массив объектов `photoMeta` ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). До этого момента поле было пустым во всех карточках — миграции не требуется. Реализация — Блок 1 GAP-018.

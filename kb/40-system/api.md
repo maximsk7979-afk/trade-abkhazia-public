@@ -1,10 +1,11 @@
 ---
 title: API
 status: active
-last_updated: 2026-05-27
+last_updated: 2026-05-30
 references:
   - database/overview.md
   - frontend.md
+  - photo-infrastructure.md
   - ../70-operations/infrastructure.md
 referenced_by: []
 ---
@@ -26,15 +27,21 @@ GET    /api/storage/:key     → { value: "<json-string>" } | null
 POST   /api/storage/:key     → { ok: true }   body: { value: "<json-string>" }
 DELETE /api/storage/:key     → { ok: true }
 GET    /api/health           → { status: "ok" }
+
+POST   /api/photos           → { ok, url, photoMeta, duplicate }     multipart, X-Photo-Token
+DELETE /api/photos           → { ok }                                JSON, X-Photo-Token
 ```
 
-Это **весь** API. Никакой бизнес-логики на бэкенде нет — он просто прокси к KV-таблице `app_storage`.
+Раздел про `/api/photos` — добавлен 2026-05-30 в составе фото-инфраструктуры ([ADR-016](../90-decisions/ADR-016-photo-infrastructure.md)). Полный контракт — [photo-infrastructure.md, слой (в)](photo-infrastructure.md#слой-в--общий-контракт-endpoint-загрузки). Реализация — в Блоке 1 GAP-018.
+
+Бизнес-логики на бэкенде минимум: `/api/storage/*` — прокси к KV-таблице `app_storage`; `/api/photos` — валидация + сохранение файла на диск + обновление массива `photoField` на бизнес-сущности.
 
 ## Авторизация
 
-**Нет.** CORS `*`. JWT_SECRET и `bcryptjs` лежат в `.env` и зависимостях, но не используются.
+- `/api/storage/*`, `/api/health` — **нет авторизации**. CORS `*`. JWT_SECRET и `bcryptjs` лежат в `.env` и зависимостях, но не используются.
+- `/api/photos` — **shared secret** в заголовке `X-Photo-Token` (env `PHOTO_TOKEN`). Слабая защита от случайных запросов; полноценный JWT — после RBAC.
 
-⚠️ **Это блокер для запуска Евы с клиентами и контрагентами.** Задача "Реализовать ролевой доступ (RBAC)" — в [roadmap](../65-roadmap/current.md).
+⚠️ **Отсутствие RBAC на storage — блокер для запуска Евы с клиентами и контрагентами.** Задача "Реализовать ролевой доступ" — в [roadmap](../65-roadmap/current.md). После RBAC `/api/photos` тоже перейдёт на JWT-проверку пользовательской сессии.
 
 ## Что делает GET / POST / DELETE
 
@@ -91,7 +98,18 @@ body: JSON.stringify(clientsArray)
 
 Решение по архитектуре API под Еву — отдельная задача в [roadmap](../65-roadmap/current.md).
 
+## `/api/photos` — загрузка и удаление фото
+
+Единая точка записи фото для Евы и trade_app. Multipart, валидация всех обязательных полей (`base`, `entityId`, `uploadedBy`, `fileUniqueId`, `file`), сохранение в `/var/www/trade/photos/<base>/<entityId>/<unixTs>_<fileUniqueId>.<ext>`, обновление массива `photoField` на бизнес-сущности через KV.
+
+Полный контракт (поля, валидация, коды ошибок, дедуп по `fileUniqueId`, конфиг `PHOTO_BASES`) — [photo-infrastructure.md, слой (в)](photo-infrastructure.md#слой-в--общий-контракт-endpoint-загрузки). Решение — [ADR-016](../90-decisions/ADR-016-photo-infrastructure.md).
+
+Контракт **строго валидирует payload** (в отличие от `/api/storage/:key` — урок [GAP-019](../00-meta/gaps.md#gap-019)): отсутствие обязательных полей → `400 BAD_PAYLOAD`, не молча.
+
+Nginx публикует папку `/var/www/trade/photos/` по URL `https://trade-abkhazia.com/photos/...` с `Cache-Control: public, max-age=31536000, immutable`.
+
 ## Связанные документы
 
 - [database/overview.md](database/overview.md)
+- [photo-infrastructure.md](photo-infrastructure.md) — фото-инфраструктура (5 слоёв)
 - [70-operations/infrastructure.md](../70-operations/infrastructure.md)
