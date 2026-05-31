@@ -1,7 +1,7 @@
 ---
 title: Decisions — журнал решений
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-05-31
 ---
 
 # 90-decisions — Журнал решений (ADR)
@@ -36,3 +36,13 @@ last_updated: 2026-04-28
 | [ADR-006](ADR-006-as-is-to-be-principle.md) | Принцип AS-IS / TO-BE | 2026-04-27 | accepted |
 | [ADR-007](ADR-007-sales-canonical-model.md) | Канонические форматы продаж | 2026-04-28 | accepted |
 | [ADR-008](ADR-008-ai-comms-architecture.md) | Архитектура коммуникации между AI-агентами через GitHub | 2026-04-30 | accepted |
+| [ADR-009](ADR-009-multitenancy-projects.md) | Мультипроектность (projectId сквозной) | 2026-05-19 | accepted |
+| [ADR-010](ADR-010-invoice-entity.md) | Сущность Invoice (входящие накладные) | 2026-05-19 | accepted |
+| [ADR-011](ADR-011-eva-supplier-segmentation.md) | Сегментация базы распознавания по поставщикам | 2026-05-19 | accepted |
+| [ADR-012](ADR-012-eva-self-learning-plan.md) | Поэтапный план обучения Евы (база + модерация человеком) | 2026-05-19 | accepted |
+| [ADR-013](ADR-013-eva-agent-architecture.md) | Архитектура агента Евы (4 слоя памяти) | 2026-05-22 | accepted |
+| [ADR-014](ADR-014-client-project-profile.md) | Проектный профиль клиента | 2026-05-22 | accepted |
+| [ADR-015](ADR-015-role-process-eva-structure.md) | Структура роль ↔ процесс ↔ Ева ↔ инструкция | 2026-05-22 | accepted |
+| [ADR-016](ADR-016-photo-infrastructure.md) | Фото-инфраструктура (5 слоёв, 4 базы) | 2026-05-30 | accepted |
+| [ADR-017](ADR-017-eva-memory-architecture.md) | Архитектура памяти Евы — финал слоёв A–D | 2026-05-31 | accepted |
+| [ADR-018](ADR-018-eva-universal-assistant.md) | Ева как универсальный помощник + изоляция данных клиента | 2026-05-31 | accepted |
