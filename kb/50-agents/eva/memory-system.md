@@ -94,15 +94,16 @@ eva_messages            -- слой A
   meta          jsonb           -- вложения, tool-вызовы, и т.п.
   created_at    timestamptz
 
-eva_client_memory       -- слой B (одна строка на клиента)
+eva_client_memory       -- слой B (одна строка на клиента); РЕАЛИЗОВАНО 2026-05-31 (GAP-024 Фаза 1)
   client_id     text pk
-  segment       text
-  assortment    jsonb           -- категории/товары/проекты (формат уточняется)
-  payment_note  text
-  style_note    text
-  facts         jsonb           -- ключевые факты
-  summary       text            -- сжатое резюме отношений
+  person        jsonb           -- блок 1 «о человеке»: address_form, personal_facts, interests,
+                                --   comm_profile, life_context, person_summary, important_dates[]
+  business      jsonb           -- блок 2 «о работе»: assortment, order_rhythm, payment_behavior,
+                                --   delivery_prefs, price_sensitivity, quality_expectations,
+                                --   special_terms, client_value, business_summary
   updated_at    timestamptz
+  -- Форма — два JSONB-блока (а не плоские колонки): набор полей доучивается без ALTER (ADR-017).
+  -- Слой доступа: code/eva/src/client-memory.js (getMemory / upsertMemory / formatForPrompt).
 
 eva_learning_queue      -- очередь предложений к общей базе C
   id            bigserial pk
