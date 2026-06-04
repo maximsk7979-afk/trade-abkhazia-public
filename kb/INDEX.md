@@ -68,6 +68,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 
 - [architecture.md](40-system/architecture.md), [frontend.md](40-system/frontend.md), [api.md](40-system/api.md), [deployment.md](40-system/deployment.md)
 - [photo-infrastructure.md](40-system/photo-infrastructure.md) — фото-инфраструктура (draft, разбор по слоям с 2026-05-30)
+- [mini-app.md](40-system/mini-app.md) — Telegram Mini App клиента: архитектура, эндпоинты, автообновление, деплой (2026-06-04)
 - database/, data-formats/
 
 ### 50-agents/ — ИИ-агенты
