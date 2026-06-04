@@ -108,6 +108,10 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-014](90-decisions/ADR-014-client-project-profile.md) — проектный профиль клиента, справочник сегментов, проектная привязка товара
 - [ADR-015](90-decisions/ADR-015-role-process-eva-structure.md) — структура роль ↔ процесс ↔ сценарий Евы ↔ инструкция; диагностика влияния изменений
 - [ADR-016](90-decisions/ADR-016-photo-infrastructure.md) — фото-инфраструктура: единый пайплайн (5 слоёв) + 4 независимых базы + расширяемость
+- [ADR-017](90-decisions/ADR-017-eva-memory-architecture.md) — архитектура памяти Евы (слои A/B/C/D)
+- [ADR-018](90-decisions/ADR-018-eva-universal-assistant.md) — Ева как универсальный помощник + изоляция данных клиента
+- [ADR-019](90-decisions/ADR-019-eva-mini-app.md) — Telegram Mini App как поверхность структурных действий Евы
+- [ADR-020](90-decisions/ADR-020-order-intake-banana-pricing.md) — приём заявок под рейс + банановое ценообразование + границы полномочий
 
 ### 95-changelog/ — История изменений
 - [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал

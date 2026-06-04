@@ -26,7 +26,7 @@ related_decisions:
 | owner (Максим) | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
 | ops-manager (Нелли) | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
 | buyer (Махо) | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
-| sales-manager | ⏳ ждём описания | 🛠 [to-be/sales-manager](to-be/sales-manager/README.md) — роль + процесс [завода клиента](to-be/sales-manager/processes/client-onboarding.md) | — | as-is активна, to-be в работе |
+| sales-manager | ⏳ ждём описания | 🛠 [to-be/sales-manager](to-be/sales-manager/README.md) — роль + процессы [завод клиента](to-be/sales-manager/processes/client-onboarding.md), [приём заявки](to-be/sales-manager/processes/order-intake.md) | — | as-is активна, to-be в работе |
 | warehouse | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
 | accountant | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
 | driver | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |

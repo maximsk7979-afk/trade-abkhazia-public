@@ -147,5 +147,5 @@ references:
 - [ADR-014](../../../90-decisions/ADR-014-client-project-profile.md) — поля карточки, сегменты, проектные блоки
 - [ADR-016](../../../90-decisions/ADR-016-photo-infrastructure.md) — фото-инфраструктура (поле 9)
 - [40-system/photo-infrastructure.md](../../../40-system/photo-infrastructure.md) — детальная спецификация по слоям
-- [order-intake.md](order-intake.md) — следующий сценарий: приём заявки (проектируется)
+- [order-intake.md](order-intake.md) — следующий сценарий: приём заявки (спроектирован 2026-06-04, [ADR-020](../../../90-decisions/ADR-020-order-intake-banana-pricing.md))
 </content>
