@@ -1,7 +1,7 @@
 ---
 title: Telegram Bot API
 status: active
-last_updated: 2026-05-30
+last_updated: 2026-06-04
 references:
   - ../50-agents/eva/deployment.md
   - ../70-operations/infrastructure.md
@@ -19,6 +19,8 @@ referenced_by: []
 
 - **Token**: хранится в `.env` на VPS как `TELEGRAM_BOT_TOKEN`. Реальное значение — в локальном `~/secrets-trade/credentials.md`.
 - **Бот**: тот же, что использовал `trade-bot` (`bot_expeditor.js`). Бот отключён, токен сохранён за Евой.
+  - **Отображаемое имя** (с 2026-06-04): `Ева - Trade Abkhazia`.
+  - **Username**: `@trade_abkhazia_sales_bot`. Используется в deep-link приглашениях онбординга (`https://t.me/trade_abkhazia_sales_bot?start=onb_<token>`) и как точка входа мини-аппа ([ADR-019](../90-decisions/ADR-019-eva-mini-app.md)).
 - **Текущий метод**: long-poll (унаследовано от старого бота).
 - **Перспектива**: рассмотреть webhook вместо polling (стабильнее).
 
@@ -60,6 +62,7 @@ NOTIFY_CHAT_IDS=118206343,1719753990
 
 - ~март 2026: создан старый бот `trade-bot` на этом токене
 - 2026-04-27: `trade-bot` отключён, токен сохранён за Евой
+- 2026-06-04: задано отображаемое имя `Ева - Trade Abkhazia` (@BotFather `/setname`); username бота — `@trade_abkhazia_sales_bot`
 - 2026-04-26..27: в логах старого бота — типичные сетевые ошибки `EFATAL: read ETIMEDOUT`, `ECONNRESET`, `ETELEGRAM: 429`, `502 Bad Gateway`. Это штатные ошибки сети, должны корректно обрабатываться (см. [INC-001](../75-incidents/INC-001-bot-anthropic-balance.md))
 
 ## Связанные документы

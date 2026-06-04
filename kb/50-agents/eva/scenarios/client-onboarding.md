@@ -66,7 +66,7 @@ references:
 Инструмент `create_client` пишет карточку в `trade-cat-clients` через data-API. Генерируется одноразовый `onbToken` для deep-link.
 
 ### 4. Отчёт + приглашение
-Ева выдаёт сводку по карточке + готовую ссылку `https://t.me/<eva_bot>?start=onb_<token>` и текст для пересылки. Менеджер сам отправляет клиенту в WhatsApp.
+Ева выдаёт сводку по карточке + готовую ссылку `https://t.me/trade_abkhazia_sales_bot?start=onb_<token>` и текст для пересылки. Менеджер сам отправляет клиенту в WhatsApp.
 
 ### 5. Активация (опционально, если у клиента есть Telegram)
 Клиент жмёт ссылку → `/start onb_<token>`:
@@ -133,7 +133,7 @@ references:
 
 ## Открытые вопросы (на согласование с Максимом)
 
-- **Username бота Евы** для deep-link (`<eva_bot>`).
+- ~~**Username бота Евы** для deep-link~~ — **РЕШЕНО 2026-06-04:** имя «Ева - Trade Abkhazia», username **`@trade_abkhazia_sales_bot`** (deep-link `https://t.me/trade_abkhazia_sales_bot?start=onb_<token>`).
 - **Название компании** в реплике-представлении.
 - **Срок жизни** `onbToken` (предложено 14 дней).
 - Нужна ли **лёгкая верификация** личности клиента при активации (или одноразового токена достаточно).
