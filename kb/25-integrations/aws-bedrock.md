@@ -32,10 +32,16 @@ LLM-ядро Евы. Все запросы к Claude (Sonnet 4.6) идут че�
 
 Максим, корпоративная карта на AWS аккаунте.
 
-## Мониторинг
+## Модели и маршрутизация (GAP-026)
 
-- AWS Console → CloudWatch → Bedrock metrics
-- ⚠️ **Нужно настроить алерт на бюджет** — это пробел, см. [GAP в gaps.md](../00-meta/gaps.md). Без алерта повторится ситуация INC-001.
+- **Sonnet** (основная, торговля/работа): `eu.anthropic.claude-sonnet-4-6` — `claude.MODEL_SONNET`.
+- **Haiku** (дешёвая, болтовня клиента): задаётся `EVA_HAIKU_MODEL` в `.env`. ⚠️ **Сейчас НЕ активна** — модель Haiku **не включена** в Bedrock этого аккаунта (любой id → `ValidationException`). Чтобы включить маршрутизацию: AWS Bedrock Console → **Model access** (регион eu-north-1) → разрешить Claude Haiku → взять рабочий **inference-profile id** (с префиксом `eu.`) → прописать в `EVA_HAIKU_MODEL` → `pm2 restart eva`. Маршрутизатор — `code/eva/src/router.js`.
+
+## Мониторинг и бюджет
+
+- **App-side алерт бюджета (реализован 2026-06-06, GAP-026 A):** Ева считает ~стоимость каждого хода (`code/eva/src/usage-tracker.js`), копит за месяц в KV `eva-usage-v1`; при 50/80/100/150% от `EVA_BUDGET_USD` (дефолт $200) шлёт владельцу алерт в Telegram. Закрывает урок INC-001 со стороны приложения.
+- AWS Console → CloudWatch → Bedrock metrics — для детальной телеметрии.
+- ⚠️ **AWS Budgets** (нативный алерт в консоли) — рекомендуется как **второй слой** к app-side (на случай, если Ева не работает). Настраивается в консоли (действие Максима).
 
 ## Что делать при отказе
 

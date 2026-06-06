@@ -130,8 +130,14 @@ GAP-013 → in-progress (остались сценарии Евы для экс�
 
 Ева заговорила с клиентами в Telegram. **Auth-гейт по роли:** привязанный клиент проходит как `client` (по `tgChatId` в карточке), сотрудники — по whitelist, неизвестный — отказ. **Роле-зависимый промпт** (base/staff/client) — клиент не видит staff-сценарии (ядро изоляции GAP-030). **Клиентские инструменты** `get_my_{balance,orders,prices}` (фильтр по `ctx.clientId`). **Знакомство** (GAP-027 closed). Развёрнуто, смоук на боевых пройден. **GAP-027 закрыт; GAP-030 — остаток только RBAC (A/B по роли + удаление памяти).** Живой Telegram-тест от лица клиента — за Максимом (нужен не-staff аккаунт, привязанный как клиент; сейчас привязан Светич К-002 / chat_id 668978082).
 
+### ✅ Сессия 2026-06-06 (вечер-3) — бэкапы + GAP-026 A/B/C
+
+**Бэкапы укреплены:** `trade-backup.sh` теперь бэкапит обе БД (`trade_db` + `eva`), ротация 14д, **тест восстановления пройден**, runbook [backup-restore.md](../70-operations/runbooks/backup-restore.md). Остаток — off-site ([GAP-043](../00-meta/gaps.md#gap-043)).
+
+**GAP-026 (Ева-помощник) — A+B+C:** **A (алерт бюджета Bedrock)** реализован и развёрнут (`usage-tracker.js` → учёт расхода в KV `eva-usage-v1` + Telegram-алерт владельцу при пороге `EVA_BUDGET_USD`=$200; закрыл INC-001). **B (маршрутизация Haiku/Sonnet)** — инфраструктура в проде (`router.js`+`claude.js`), но **Haiku в Bedrock не включён** → пока всегда Sonnet; активация = Максим включает Haiku в Bedrock Console (Model access) + `EVA_HAIKU_MODEL` в .env. **C (персона+дисклеймеры)** — уже в промпте. **Остаток GAP-026: D (web-search — нужен провайдер/ключ)** + активация Haiku.
+
 **Следующая сессия — кандидаты:**
-- **[GAP-026](../00-meta/gaps.md#gap-026):** Ева-помощник — web-search, маршрутизация моделей, лимиты, **алерт бюджета Bedrock** (INC-001). Логично следом за открытием клиентских диалогов.
+- **[GAP-026](../00-meta/gaps.md#gap-026) D:** web-search (нужен провайдер+ключ от Максима) + активация Haiku (Bedrock Model access). Off-site бэкапов [GAP-043](../00-meta/gaps.md#gap-043).
 - **[GAP-041](../00-meta/gaps.md#gap-041):** учёт смешанного рейса по проектам (Шаг 3) — per-line projectId, FIFO, распределение расходов; админка trade_app для смешанных рейсов.
 - **[GAP-042](../00-meta/gaps.md#gap-042) (low):** сверка слоёв учёта склада «Движение по складу» ↔ FIFO-партии (единый источник истины / приходная WhOp).
 - **[GAP-013](../00-meta/gaps.md#gap-013):** сценарии Евы для роли экспедитора (подтверждение отгрузки/возвраты через Telegram, фото накладной [GAP-020](../00-meta/gaps.md#gap-020)).
@@ -251,7 +257,7 @@ GAP-013 → in-progress (остались сценарии Евы для экс�
 - [ ] Описать матрицу прав в [35-security/role-permissions.md](../35-security/role-permissions.md)
 
 ### Мониторинг
-- [ ] Настроить алерт на бюджет AWS Bedrock (закроет урок [INC-001](../75-incidents/INC-001-bot-anthropic-balance.md))
+- [x] Настроить алерт на бюджет AWS Bedrock (закрыл урок [INC-001](../75-incidents/INC-001-bot-anthropic-balance.md)) — **app-side, 2026-06-06** (GAP-026 A, `usage-tracker.js` → алерт владельцу в Telegram при пороге `EVA_BUDGET_USD`). AWS Budgets-нативный — опционально, как дубль.
 - [ ] Мониторинг баланса Vultr (закроет урок [INC-002](../75-incidents/INC-002-vps-billing-outage.md))
 
 ## Отложено
