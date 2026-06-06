@@ -1,7 +1,7 @@
 ---
 title: Roles — роли в бизнесе
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-06-06
 related_decisions:
   - ../90-decisions/ADR-006-as-is-to-be-principle.md
 ---
@@ -33,7 +33,7 @@ related_decisions:
 | client | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
 | partner (Лия) | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
 | contractor | ⏳ ждём описания | ⏳ проектируем | — | as-is активна |
-| **expeditor** | — *нет сейчас* | 🆕 запланирована | — | новая роль |
+| **expeditor** | совмещён менеджером ([as-is](as-is/README.md)) | 🛠 [to-be/expeditor](to-be/expeditor/README.md) — роль + процесс [отгрузка](to-be/expeditor/processes/shipment.md) | — | роль совмещает менеджер, to-be описана |
 
 ## Ожидающее наполнение
 
