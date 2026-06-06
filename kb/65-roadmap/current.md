@@ -134,10 +134,11 @@ GAP-013 → in-progress (остались сценарии Евы для экс�
 
 **Бэкапы укреплены:** `trade-backup.sh` теперь бэкапит обе БД (`trade_db` + `eva`), ротация 14д, **тест восстановления пройден**, runbook [backup-restore.md](../70-operations/runbooks/backup-restore.md). Остаток — off-site ([GAP-043](../00-meta/gaps.md#gap-043)).
 
-**GAP-026 (Ева-помощник) — A+B+C:** **A (алерт бюджета Bedrock)** реализован и развёрнут (`usage-tracker.js` → учёт расхода в KV `eva-usage-v1` + Telegram-алерт владельцу при пороге `EVA_BUDGET_USD`=$200; закрыл INC-001). **B (маршрутизация Haiku/Sonnet)** — инфраструктура в проде (`router.js`+`claude.js`), но **Haiku в Bedrock не включён** → пока всегда Sonnet; активация = Максим включает Haiku в Bedrock Console (Model access) + `EVA_HAIKU_MODEL` в .env. **C (персона+дисклеймеры)** — уже в промпте. **Остаток GAP-026: D (web-search — нужен провайдер/ключ)** + активация Haiku.
+**GAP-026 (Ева-помощник) — A+C+D + инфраструктура B:** **A (алерт бюджета Bedrock)** — `usage-tracker.js` + Telegram-алерт владельцу при пороге `EVA_BUDGET_USD`=$200; закрыл INC-001. **D (web-search)** — инструмент `web_search` активирован на **Tavily** (ключ в VPS .env, не в git); live-тест прошёл — Ева ищет в интернете. **C (персона+дисклеймеры)** — в промпте. **B (маршрутизация Haiku/Sonnet)** — инфраструктура в проде (`router.js`+`claude.js`), но **Haiku в Bedrock не включён** → пока всегда Sonnet. **Остаток GAP-026: только активация Haiku** — Максим включает Haiku в Bedrock Console (Model access) + `EVA_HAIKU_MODEL` в .env.
 
 **Следующая сессия — кандидаты:**
-- **[GAP-026](../00-meta/gaps.md#gap-026) D:** web-search (нужен провайдер+ключ от Максима) + активация Haiku (Bedrock Model access). Off-site бэкапов [GAP-043](../00-meta/gaps.md#gap-043).
+- **Активация Haiku** (Bedrock Model access — за Максимом) → включить `EVA_HAIKU_MODEL` → маршрутизация заработает (экономия на болтовне). Закроет GAP-026.
+- **Off-site бэкапов** [GAP-043](../00-meta/gaps.md#gap-043) — выбрать назначение.
 - **[GAP-041](../00-meta/gaps.md#gap-041):** учёт смешанного рейса по проектам (Шаг 3) — per-line projectId, FIFO, распределение расходов; админка trade_app для смешанных рейсов.
 - **[GAP-042](../00-meta/gaps.md#gap-042) (low):** сверка слоёв учёта склада «Движение по складу» ↔ FIFO-партии (единый источник истины / приходная WhOp).
 - **[GAP-013](../00-meta/gaps.md#gap-013):** сценарии Евы для роли экспедитора (подтверждение отгрузки/возвраты через Telegram, фото накладной [GAP-020](../00-meta/gaps.md#gap-020)).
