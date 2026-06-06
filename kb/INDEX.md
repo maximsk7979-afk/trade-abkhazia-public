@@ -113,6 +113,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-018](90-decisions/ADR-018-eva-universal-assistant.md) — Ева как универсальный помощник + изоляция данных клиента
 - [ADR-019](90-decisions/ADR-019-eva-mini-app.md) — Telegram Mini App как поверхность структурных действий Евы
 - [ADR-020](90-decisions/ADR-020-order-intake-banana-pricing.md) — приём заявок под рейс + банановое ценообразование + границы полномочий
+- [ADR-021](90-decisions/ADR-021-daily-mixed-trips-day-order.md) — ежедневные смешанные рейсы + заказ на день + единый каталог по проектам клиента
 
 ### 95-changelog/ — История изменений
 - [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал
