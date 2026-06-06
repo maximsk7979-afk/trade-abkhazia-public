@@ -1,7 +1,7 @@
 ---
 title: Telegram Bot API
 status: active
-last_updated: 2026-06-04
+last_updated: 2026-06-06
 references:
   - ../50-agents/eva/deployment.md
   - ../70-operations/infrastructure.md
@@ -44,6 +44,23 @@ NOTIFY_CHAT_IDS=118206343,1719753990
 - `1719753990` — Нелли (@Nelli2023N)
 
 Используется при создании нового клиента, других системных событиях.
+
+## Доступ к Еве — белый список (`ALLOWED_CHAT_IDS`)
+
+Переменная `ALLOWED_CHAT_IDS` в `.env` Евы (`/var/www/eva/.env`) — кто может **вести диалог** с Евой (онбординг, команды). Гейт в `src/auth.js` (Ит.1–3; снять при открытии клиентского чата — GAP-026). **Активация клиента по deep-link** (`/start onb_<token>`) и **заказы через мини-апп** (`initData`) идут **мимо** этого списка — клиента в whitelist добавлять не нужно.
+
+Подключённые сотрудники (с 2026-06-06):
+```
+ALLOWED_CHAT_IDS=118206343,2007503947,1246188432,5463278894,1719753990,479463516
+```
+- `118206343` — Максим (С-001, owner)
+- `2007503947` — Иван (С-004, sales_manager/gen_director)
+- `1246188432` — Алексей (С-006, sales_manager)
+- `5463278894` — Саид (С-005, sales_manager/warehouse; телефон не заполнен)
+- `1719753990` — Нелли (С-002, ops_manager)
+- `479463516` — Наталья (С-007, fin_director/ops_manager)
+
+При добавлении сотрудника: завести карточку в `trade-cat-staff` (с `telegramChatId` + ролью `sales_manager` + `phone`), добавить его chat_id в `ALLOWED_CHAT_IDS`, `pm2 restart eva`. chat_id узнать: сотрудник пишет боту `/start` → в логах Евы (`/var/log/eva-out-2.log`) виден `unauthorized chatId=...`, либо @userinfobot.
 
 ## Приём фото от пользователей
 
