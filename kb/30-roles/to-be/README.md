@@ -1,7 +1,7 @@
 ---
 title: Roles TO-BE — целевое состояние
 status: stub
-last_updated: 2026-04-28
+last_updated: 2026-06-09
 ---
 
 # TO-BE — Роли как должны работать с Евой
@@ -24,7 +24,12 @@ last_updated: 2026-04-28
 |---|---|---|---|
 | Менеджер продаж | `sales_manager` | действующие менеджеры | [README](sales-manager/README.md) · процессы [онбординг](sales-manager/processes/client-onboarding.md), [приём заявки](sales-manager/processes/order-intake.md) |
 | Экспедитор | `expeditor` | совмещают менеджеры | [README](expeditor/README.md) · процесс [отгрузка](expeditor/processes/shipment.md) |
-| Закупщик | `buyer` | владелец (позже — Махо/водитель) | [README](buyer/README.md) · процесс [закупка банана](buyer/processes/banana-procurement.md) |
+| Закупщик | `buyer` | владелец (позже — Махо/водитель) | [README](buyer/README.md) · процессы [закупка банана](buyer/processes/banana-procurement.md), [закупка из поля (DRAFT)](buyer/processes/banana-procurement-field-DRAFT.md) |
+| Генеральный директор | `gen_director` | Иван Голованов (С-004) | [README](gen_director/README.md) — решения по объёму/поставщику/водителю/лимиту закупки |
+| Поставщик (внешн.) | `supplier` | Рамаз (П-005), Уча | [README](supplier/README.md) — изолированная переписка с Евой по закупке |
+
+> Роли `gen_director`/`supplier` заведены 2026-06-09 (ADR-022). Водитель — **не роль**, а
+> контрагент `transport` (КА-007/008/009). Полный каталог — [35-security/role-catalog.md](../../35-security/role-catalog.md).
 
 ## Принципы трансформации
 
