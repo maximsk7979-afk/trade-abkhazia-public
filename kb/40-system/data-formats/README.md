@@ -10,16 +10,11 @@ JSON-формат сущностей в `app_storage`. Имена полей, т
 
 > **Логическая модель** — в [`20-domain/data-model/`](../../20-domain/data-model/). Здесь — про **JSON-формат**.
 
-## Что будет внутри
+## Описанные форматы
 
-- **sale.md** — формат продажи (ПС/ДС)
-- **trip.md** — формат рейса
-- **delivery.md** — формат доставки
-- **batch.md** — формат партии
-- **settlement.md** — формат записи взаиморасчёта
-- **client.md**, **staff.md**, **office.md**, **product.md**, **sku.md** — справочники
+✅ Готово: [sale.md](sale.md), [trip.md](trip.md) (2026-06-08), [purchase.md](purchase.md), [batch.md](batch.md), [settlement.md](settlement.md), [client.md](client.md), [staff.md](staff.md), [office.md](office.md), [project.md](project.md), [whop.md](whop.md).
 
-⏳ Заглушка. Наполнение — отдельный этап, по сущности за раз (как глоссарий).
+⏳ Ещё нет: delivery.md, product.md, sku.md (наполнение — по сущности за раз).
 
 ## Принципиальные особенности
 

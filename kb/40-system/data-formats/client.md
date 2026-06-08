@@ -1,7 +1,7 @@
 ---
 title: Client — JSON-формат клиента
 status: active
-last_updated: 2026-05-30
+last_updated: 2026-06-08
 references:
   - ../database/storage-keys.md
   - ./sale.md
@@ -67,7 +67,7 @@ referenced_by: []
 | Поле | Тип | Обязательное | Описание |
 |---|---|---|---|
 | `id` | string | да | ID с префиксом `К-` (например, `К-007`) |
-| `n` | string | да | **Уникальное** название клиента. Уникальность проверяется case-insensitive trim в `saveClient` (форма trade_app) и в инструменте Евы `create_client` (когда появится) |
+| `n` | string | да | **Уникальное** название клиента. Уникальность проверяется case-insensitive trim в `saveClient` (форма trade_app) и в инструменте Евы `create_client` |
 | `contactName` | string | да для новых | Имя контактного лица — Ева им обращается к клиенту. Для существующих до 2026-05-23 — пустая строка с мягким предупреждением при сохранении |
 | `onbStatus` | string | да | Жизненный статус клиента: `"Активен"` или `"На паузе"` (русские строки в KV). По умолчанию — `"Активен"`. Миграция на чтении: legacy без поля = `"Активен"` |
 | `deliveryMode` | string | нет | **Способ доставки по умолчанию** (на **все** проекты, не per-project): `"delivery"` (доставка) / `"pickup"` (самовывоз). Мини-апп предзаполняет тумблер заявки этим значением (защита от ошибки — клиент не забудет переключить). По умолчанию `"delivery"`; миграция на чтении из `projects[0].saleType` (`ps`→`pickup`, иначе `delivery`). ADR-021 / 2026-06-06 |
@@ -78,6 +78,7 @@ referenced_by: []
 | `ynavUrl` | string | нет | URL точки в Яндекс.Навигаторе (для водителей) |
 | `locationPhotos` | array | нет | Массив объектов `photoMeta` (URL фото входа/витрины + метаданные). База `client-locations` фото-инфраструктуры ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). Заполняется через Еву (шаг 9 онбординга) или через форму trade_app (после Блока 1 GAP-018). Формат `photoMeta` — см. ниже |
 | `managerId` | string | нет | Закреплённый менеджер продаж (`С-XXX`, роль `sales_manager`). При создании продажи копируется в `sale.managerId` |
+| `bananaFixedPrice` | number / string | нет | **Договорная фикс-цена банана** ₽/ящик. Если задана (>0) — перебивает сетку объёма (`volume-tier`) для этого клиента и **не добавляет** надбавку за доставку (`source: "fixed"`, см. [ADR-020](../../90-decisions/ADR-020-order-intake-banana-pricing.md)). Пусто/отсутствует = цена по сетке объёма. Читается в `order-service.clientFixedPrice`. Задаётся в карточке клиента trade_app или через Еву `create_client` (опц. поле). Введено 2026-06-08 (Фаза 0 банана) |
 
 ### Блок проекта (`projects[]`)
 
@@ -89,6 +90,8 @@ referenced_by: []
 | `saleType` | string | `ps` (со склада) / `ds` (доставка) — тип продажи в этом проекте. Пустая строка допустима |
 
 См. правила хелперов `getClientProjects` и `getClientPriceLevel(client, projectId)` в [ADR-014](../../90-decisions/ADR-014-client-project-profile.md) §4. На онбординге сегмент/уровень цены/тип продажи задаются **одним ответом** и пишутся во все проектные блоки одинаково (см. [процесс client-onboarding](../../30-roles/to-be/sales-manager/processes/client-onboarding.md)).
+
+> ⚠️ **Банан (PRJ-004) не использует `priceLevel`.** Уровень цены `opt/mid/ret` — это cost-markup модель для овощей. Цена банана берётся по **сетке объёма** (`volume-tier`, [ADR-020](../../90-decisions/ADR-020-order-intake-banana-pricing.md)) или по `bananaFixedPrice` (если задана). Поэтому у бананового клиента `projects[PRJ-004].priceLevel` фактически игнорируется ценообразованием банана — он остаётся в карточке для единообразия, но на цену банана не влияет.
 
 ### Объект `photoMeta` (элемент массива `locationPhotos[]`)
 
@@ -146,3 +149,4 @@ referenced_by: []
 - 2026-05-22: ADR-014 — проектные блоки `projects[]`, `locationPhotos[]` (К3, коммиты `a3472d2`, `417dc3f`, `43cfe4d`).
 - 2026-05-23: Поля онбординга `contactName`, `onbStatus` + уникальность `n` (коммит `2403e44`).
 - 2026-05-30: `locationPhotos[]` переоформлен из массива URL в массив объектов `photoMeta` ([ADR-016](../../90-decisions/ADR-016-photo-infrastructure.md)). До этого момента поле было пустым во всех карточках — миграции не требуется. Реализация — Блок 1 GAP-018.
+- 2026-06-08: добавлено поле `bananaFixedPrice` (договорная фикс-цена банана) — UI карточки клиента в trade_app + опц. поле в Еве `create_client` (Фаза 0 банана). Зафиксирован нюанс «банан игнорирует priceLevel».

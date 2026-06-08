@@ -61,6 +61,7 @@ Telegram, AWS Bedrock, Anthropic API, Google Sheets, Yandex Maps.
 - to-be/ — целевое состояние **с** Евой
   - [sales-manager/](30-roles/to-be/sales-manager/README.md) — роль + процессы [завод клиента](30-roles/to-be/sales-manager/processes/client-onboarding.md), [приём заявки](30-roles/to-be/sales-manager/processes/order-intake.md)
   - [expeditor/](30-roles/to-be/expeditor/README.md) — роль + процесс [отгрузка/доставка](30-roles/to-be/expeditor/processes/shipment.md) (2026-06-06)
+  - [buyer/](30-roles/to-be/buyer/README.md) — роль закупщика + процесс [закупка банана](30-roles/to-be/buyer/processes/banana-procurement.md) (2026-06-08)
 
 ### 35-security/ — Безопасность и права доступа
 Матрица прав, политика доступа, классификация данных.
@@ -92,7 +93,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 ### 80-instructions/ — Сгенерированные инструкции
 Вторичный слой: должностные инструкции, регламенты, инструкции для клиентов и контрагентов. Собирается из первоисточников.
 
-- for-team/ — [sales-manager](80-instructions/for-team/sales-manager.md), [expeditor](80-instructions/for-team/expeditor.md), [eva-quickstart](80-instructions/for-team/eva-quickstart.md)
+- for-team/ — [sales-manager](80-instructions/for-team/sales-manager.md), [expeditor](80-instructions/for-team/expeditor.md), [buyer](80-instructions/for-team/buyer.md), [eva-quickstart](80-instructions/for-team/eva-quickstart.md)
 
 ### 90-decisions/ — Журнал решений (ADR)
 Каждое архитектурное решение зафиксировано отдельным файлом.
