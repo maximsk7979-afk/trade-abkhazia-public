@@ -66,6 +66,10 @@ Telegram, AWS Bedrock, Anthropic API, Google Sheets, Yandex Maps.
 ### 35-security/ — Безопасность и права доступа
 Матрица прав, политика доступа, классификация данных.
 
+- [role-catalog.md](35-security/role-catalog.md) — каталог ролей и назначения (сверено с KV)
+- [role-permissions.md](35-security/role-permissions.md) — матрица «роль × функция × право» (живая, наполняется)
+- См. [ADR-022](90-decisions/ADR-022-role-model-rbac.md) — ролевая модель и RBAC
+
 ### 40-system/ — Текущая система
 Frontend (`trade_app_v3.jsx`), API, БД, физический формат данных, деплой.
 

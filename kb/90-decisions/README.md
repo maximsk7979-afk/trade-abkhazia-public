@@ -46,3 +46,7 @@ last_updated: 2026-05-31
 | [ADR-016](ADR-016-photo-infrastructure.md) | Фото-инфраструктура (5 слоёв, 4 базы) | 2026-05-30 | accepted |
 | [ADR-017](ADR-017-eva-memory-architecture.md) | Архитектура памяти Евы — финал слоёв A–D | 2026-05-31 | accepted |
 | [ADR-018](ADR-018-eva-universal-assistant.md) | Ева как универсальный помощник + изоляция данных клиента | 2026-05-31 | accepted |
+| [ADR-019](ADR-019-eva-mini-app.md) | Telegram Mini App как поверхность структурных действий | 2026-06-04 | accepted |
+| [ADR-020](ADR-020-order-intake-banana-pricing.md) | Приём заявок под рейс + банановое ценообразование | 2026-06-04 | accepted |
+| [ADR-021](ADR-021-daily-mixed-trips-day-order.md) | Ежедневные смешанные рейсы + заказ на день | 2026-06-06 | accepted |
+| [ADR-022](ADR-022-role-model-rbac.md) | Ролевая модель и RBAC (жёсткая привязка процессов к ролям) | 2026-06-09 | accepted |
