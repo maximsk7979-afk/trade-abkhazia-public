@@ -53,9 +53,12 @@ client / Ева) и поверхностью.
 
 ## Реализация гейтинга (где в коде)
 
-- **Ева:** `code/eva/src/tools/index.js` — `accessOf`/`roleAllowed`/`getSchemas`/`executeByName`;
-  `code/eva/src/message-log.js` — `resolveIdentity`. Перевести на массив ролей + `access`-список.
-- **Мини-апп:** `code/trade-api/mini-auth.js` — `resolveIdentity` + `requireMiniAuth`; гейт
-  ролей на каждом `/api/mini/*` эндпоинте.
+- **Ева:** ✅ RBAC-ядро `code/eva/src/tools/access.js` (`roleAllowed`, fail-closed, owner-суперюзер,
+  `access` = список ролей / `staff|client|any|supplier`); `tools/index.js` использует его в
+  `getSchemas`/`executeByName`; `message-log.js resolveIdentity` отдаёт массив ролей; промпт
+  роле-зависимый (+ блок `supplier`). Тест `test/tools-access.test.js`. Задеплоено 2026-06-09.
+- **Мини-апп:** ✅ `code/trade-api/mini-auth.js resolveIdentity` отдаёт `roles[]`, `requireMiniAuth`
+  кладёт `req.mini.roles`. ⏳ Гранулярный гейт **самих** `/api/mini/*` эндпоинтов — при модулях
+  закупщика (сейчас грубый класс `req.mini.role`). Задеплоено 2026-06-09.
 - **trade_app (десктоп):** ⏳ авторизации пока нет (см. [README](README.md)); RBAC десктопа —
   отдельный этап.
