@@ -1,8 +1,9 @@
 ---
-title: "Сценарий Евы: оркестрация закупки банана (DRAFT)"
-status: draft
-last_updated: 2026-06-09
+title: "Сценарий Евы: оркестрация закупки банана"
+status: in-progress
+last_updated: 2026-06-10
 related_decisions:
+  - ../../../90-decisions/ADR-023-procurement-orchestrator.md
   - ../../../90-decisions/ADR-022-role-model-rbac.md
   - ../../../90-decisions/ADR-019-eva-mini-app.md
   - ../../../90-decisions/ADR-015-role-process-eva-structure.md
@@ -17,11 +18,13 @@ references:
 > **Техническая сторона Евы** для процесса закупки банана «из поля». Бизнес-взгляд (что
 > происходит по шагам, дедлайны, акторы) — в процессе роли
 > [banana-procurement-field-DRAFT.md](../../../30-roles/to-be/buyer/processes/banana-procurement-field-DRAFT.md).
-> Привязка к ролям — [ADR-022](../../../90-decisions/ADR-022-role-model-rbac.md).
+> Архитектура — [ADR-023](../../../90-decisions/ADR-023-procurement-orchestrator.md);
+> привязка к ролям — [ADR-022](../../../90-decisions/ADR-022-role-model-rbac.md).
 >
-> ⚠️ **Статус — DRAFT / в дизайне, НЕ реализовано.** Здесь зафиксирован каркас того, что Еве
-> предстоит уметь, и какие новые возможности это требует. Детальная проработка и реализация —
-> отдельными под-этапами.
+> ⚠️ **Статус — в реализации (снизу вверх).** Архитектура зафиксирована в ADR-023. Ядро —
+> чистый автомат [`cycle-machine.js`](../../../../code/eva/src/procurement/cycle-machine.js)
+> (+46 unit-тестов) — **готово 2026-06-10**. Дальше: storage `trade-banana-cycles` → `procurement-tick.js`
+> (cron) → реактивный `advance_cycle` → инструменты рейса → enablers. План — в [roadmap](../../../65-roadmap/current.md).
 
 ## Суть
 
@@ -64,7 +67,8 @@ D4        доставка клиентам
 - **Контроль дедлайнов + алерты** — таймеры по этапам, эскалация при нарушении.
 - **Накладная-PDF** — приём, перевод с грузинского, сверка 4 полей (отдельный под-этап; Invoice ADR-010/011).
 - **Чтение фото водителя** — ВУ/техпаспорт из карточки контрагента `transport` (поля добавить).
-- **Лимит ящиков рейса** — `orderCapacity` для бананового рейса (в отличие от смешанных, ADR-021).
+- ~~Лимит ящиков рейса~~ — ✅ `orderCapacity` уже реализован и enforced (`order-service.js`); Еве нужны лишь инструменты задать/изменить (`create_banana_trip`/`set_trip_capacity`).
+- ✅ **Ядро-автомат** — [`cycle-machine.js`](../../../../code/eva/src/procurement/cycle-machine.js): чистый `transition()`, состояния/события/эффекты, 46 тестов (готово 2026-06-10).
 
 ## Отложенные под-этапы (детали позже)
 

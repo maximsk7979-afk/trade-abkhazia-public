@@ -50,3 +50,4 @@ last_updated: 2026-05-31
 | [ADR-020](ADR-020-order-intake-banana-pricing.md) | Приём заявок под рейс + банановое ценообразование | 2026-06-04 | accepted |
 | [ADR-021](ADR-021-daily-mixed-trips-day-order.md) | Ежедневные смешанные рейсы + заказ на день | 2026-06-06 | accepted |
 | [ADR-022](ADR-022-role-model-rbac.md) | Ролевая модель и RBAC (жёсткая привязка процессов к ролям) | 2026-06-09 | accepted |
+| [ADR-023](ADR-023-procurement-orchestrator.md) | Оркестратор закупки банана (конечный автомат цикла, два привода) | 2026-06-10 | accepted |
