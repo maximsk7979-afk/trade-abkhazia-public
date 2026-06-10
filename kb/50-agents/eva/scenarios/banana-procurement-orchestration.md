@@ -21,10 +21,11 @@ references:
 > Архитектура — [ADR-023](../../../90-decisions/ADR-023-procurement-orchestrator.md);
 > привязка к ролям — [ADR-022](../../../90-decisions/ADR-022-role-model-rbac.md).
 >
-> ⚠️ **Статус — в реализации (снизу вверх).** Архитектура зафиксирована в ADR-023. Ядро —
-> чистый автомат [`cycle-machine.js`](../../../../code/eva/src/procurement/cycle-machine.js)
-> (+46 unit-тестов) — **готово 2026-06-10**. Дальше: storage `trade-banana-cycles` → `procurement-tick.js`
-> (cron) → реактивный `advance_cycle` → инструменты рейса → enablers. План — в [roadmap](../../../65-roadmap/current.md).
+> ⚠️ **Статус — в реализации (снизу вверх).** Архитектура зафиксирована в ADR-023.
+> **Готово и задеплоено на прод 2026-06-10:** ядро-автомат [`cycle-machine.js`](../../../../code/eva/src/procurement/cycle-machine.js),
+> storage `trade-banana-cycles`, проактивный `procurement-tick.js` (cron — **ещё не запланирован**, 1.6),
+> реактивный `advance_cycle`, инструменты рейса `create_banana_trip`/`set_trip_capacity` (1.5).
+> **Дальше:** 1.6 enablers (`tgChatId` поставщикам, фото ВУ/техпаспорта перевозчиков, деплой cron-тика, аудит cutoff). План — в [roadmap](../../../65-roadmap/current.md).
 
 ## Суть
 

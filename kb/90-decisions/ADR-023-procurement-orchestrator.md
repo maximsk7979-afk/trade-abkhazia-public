@@ -114,7 +114,7 @@ PROEZD_PENDING → LOADING → PAID → DONE` (+ `CANCELLED`).
 - [x] Storage-слой `cycle-store.js` над KV `trade-banana-cycles` + 19 тестов.
 - [x] `procurement-tick.js` (cron) — `tick-decider.js` (1.3a, 25 тестов) + `effect-exec.js` (1.3b, 25 тестов). Деплой cron — при выкатке (1.6).
 - [x] Инструмент `advance_cycle` + `cycle-context.js` + cycle-aware систем-промпт (1.4, 32+10 тестов; интегрирован в `index.js`/`system-prompt.js`/реестр).
-- [ ] Инструменты `create_banana_trip` / `set_trip_capacity` (рейс сейчас заводит effect-exec на SUPPLIER_CONFIRM; явные tool'ы — для ручного ведения).
+- [x] Инструменты `create_banana_trip` / `set_trip_capacity` (1.5, 25 тестов; access ГД/закупщик, переиспользуют `effect-exec`; дедуп по дате + отказ при активном цикле). Задеплоено 2026-06-10.
 - [ ] Enablers: `tgChatId` поставщикам, фото ВУ/техпаспорта КА-007/8/9, аудит `cutoffForDate` +03→+04.
 
 План инкрементов — в [roadmap](../65-roadmap/current.md).
