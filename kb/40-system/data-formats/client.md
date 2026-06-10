@@ -28,19 +28,12 @@ referenced_by: []
   "n": "Магазин «Морской»",
   "contactName": "Аршак",
   "onbStatus": "Активен",
+  "segment": "СГ-002",
+  "priceLevel": "opt",
+  "deliveryMode": "delivery",
   "projects": [
-    {
-      "projectId": "PRJ-002",
-      "segment": "СГ-002",
-      "priceLevel": "opt",
-      "saleType": "ds"
-    },
-    {
-      "projectId": "PRJ-003",
-      "segment": "СГ-002",
-      "priceLevel": "opt",
-      "saleType": "ds"
-    }
+    { "projectId": "PRJ-002" },
+    { "projectId": "PRJ-003" }
   ],
   "wa": "+79991234567",
   "tg": "@arshak",
@@ -70,8 +63,10 @@ referenced_by: []
 | `n` | string | да | **Уникальное** название клиента. Уникальность проверяется case-insensitive trim в `saveClient` (форма trade_app) и в инструменте Евы `create_client` |
 | `contactName` | string | да для новых | Имя контактного лица — Ева им обращается к клиенту. Для существующих до 2026-05-23 — пустая строка с мягким предупреждением при сохранении |
 | `onbStatus` | string | да | Жизненный статус клиента: `"Активен"` или `"На паузе"` (русские строки в KV). По умолчанию — `"Активен"`. Миграция на чтении: legacy без поля = `"Активен"` |
-| `deliveryMode` | string | нет | **Способ доставки по умолчанию** (на **все** проекты, не per-project): `"delivery"` (доставка) / `"pickup"` (самовывоз). Мини-апп предзаполняет тумблер заявки этим значением (защита от ошибки — клиент не забудет переключить). По умолчанию `"delivery"`; миграция на чтении из `projects[0].saleType` (`ps`→`pickup`, иначе `delivery`). ADR-021 / 2026-06-06 |
-| `projects` | array | да | Проектные блоки клиента (см. ниже). Минимум один блок |
+| `segment` | string | нет | **Сегмент клиента** `СГ-NNN` (один на клиента, на все проекты — D, 2026-06-10). Информативный (память Евы, онбординг); в ценообразовании не участвует. Миграция на чтении из `projects[0].segment`. |
+| `priceLevel` | string | нет | **Уровень цены клиента** `opt`/`mid`/`ret` (**один на все проекты** — D, 2026-06-10). Читается `getClientPriceLevel(client)`; фолбэк на `projects[0].priceLevel`/`pt` (легаси). Применяется в cost-markup модели овощей; **банан игнорирует** (volume-tier). |
+| `deliveryMode` | string | нет | **Способ доставки по умолчанию** (на **все** проекты): `"delivery"` / `"pickup"`. Мини-апп предзаполняет тумблер заявки. По умолчанию `"delivery"`; миграция из `projects[0].saleType`. ADR-021 / 2026-06-06 |
+| `projects` | array | да | **Список проектов клиента** — `[{projectId}]` (в каких проектах работает). С D (2026-06-10) per-проектные `segment`/`priceLevel`/`saleType` убраны — они на уровне клиента. Минимум один проект |
 | `wa` | string | да на онбординге | WhatsApp в международном формате `+<код>` |
 | `tg` | string | нет | Telegram username (`@username`). Заполняется автоматически при активации deep-link |
 | `tgChatId` | string | нет | Chat ID для бота/Евы. Заполняется автоматически при активации deep-link |
@@ -83,16 +78,15 @@ referenced_by: []
 
 ### Блок проекта (`projects[]`)
 
+С **D (2026-06-10)** блок проекта несёт только `projectId` — список проектов, в которых клиент работает:
+
 | Поле | Тип | Описание |
 |---|---|---|
 | `projectId` | string | `PRJ-NNN` из [trade-cat-projects](./project.md) |
-| `segment` | string | `СГ-NNN` из `trade-cat-segments` (только сегменты с этим `projectId` в `applicableProjects`) |
-| `priceLevel` | string | `opt` / `mid` / `ret` — уровень цены клиента в этом проекте |
-| `saleType` | string | `ps` (со склада) / `ds` (доставка) — тип продажи в этом проекте. Пустая строка допустима |
 
-См. правила хелперов `getClientProjects` и `getClientPriceLevel(client, projectId)` в [ADR-014](../../90-decisions/ADR-014-client-project-profile.md) §4. На онбординге сегмент/уровень цены/тип продажи задаются **одним ответом** и пишутся во все проектные блоки одинаково (см. [процесс client-onboarding](../../30-roles/to-be/sales-manager/processes/client-onboarding.md)).
+`segment`, `priceLevel`, `deliveryMode` — теперь **на уровне клиента** (один на все проекты). Прежние per-проектные `segment`/`priceLevel`/`saleType` в блоках — **легаси** (читаются как фолбэк через `getClientProjects`/`getClientPriceLevel`, но в новых/мигрированных карточках их нет). Решение: «один клиент — один уровень прайса по всем проектам» (Максим, 2026-06-10).
 
-> ⚠️ **Банан (PRJ-004) не использует `priceLevel`.** Уровень цены `opt/mid/ret` — это cost-markup модель для овощей. Цена банана берётся по **сетке объёма** (`volume-tier`, [ADR-020](../../90-decisions/ADR-020-order-intake-banana-pricing.md)) или по `bananaFixedPrice` (если задана). Поэтому у бананового клиента `projects[PRJ-004].priceLevel` фактически игнорируется ценообразованием банана — он остаётся в карточке для единообразия, но на цену банана не влияет.
+> ⚠️ **Банан (PRJ-004) не использует `priceLevel`** — цена по `volume-tier` ([ADR-020](../../90-decisions/ADR-020-order-intake-banana-pricing.md)) или `bananaFixedPrice`. Поэтому единый клиентский `priceLevel` (овощной) на банан не влияет.
 
 ### Объект `photoMeta` (элемент массива `locationPhotos[]`)
 
