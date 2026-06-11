@@ -9,7 +9,10 @@ references:
   - ../../../35-security/role-catalog.md
   - ../../../90-decisions/ADR-022-role-model-rbac.md
   - ../../../90-decisions/ADR-015-role-process-eva-structure.md
-referenced_by: []
+referenced_by:
+  - ../buyer/processes/banana-procurement-field-DRAFT.md
+  - ../../../80-instructions/for-team/gen_director.md
+  - ../../../20-domain/pricing.md
 ---
 
 # Генеральный директор (TO-BE, с Евой)
@@ -65,7 +68,7 @@ referenced_by: []
 ## Бизнес-процессы роли
 
 ГД — ключевой участник процесса закупки банана «из поля» (ведущая роль процесса — закупщик):
-- [banana-procurement-field-DRAFT.md](../buyer/processes/banana-procurement-field-DRAFT.md) — шаги 1 (объём/поставщик), 5–6 (лимит), 7 (водитель). **Статус процесса — DRAFT (в дизайне).**
+- [banana-procurement-field-DRAFT.md](../buyer/processes/banana-procurement-field-DRAFT.md) — шаги 1 (объём/поставщик), 5–6 (лимит), 7 (водитель). **Процесс реализован оркестратором (ADR-023, на проде); шаги 8/10–12 — заглушки.**
 
 ## Связанные документы
 

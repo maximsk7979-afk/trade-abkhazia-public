@@ -1,7 +1,7 @@
 ---
 title: Карта базы знаний
 status: active
-last_updated: 2026-05-30
+last_updated: 2026-06-11
 ---
 
 # Карта базы знаний (INDEX)
@@ -78,7 +78,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [architecture.md](40-system/architecture.md), [frontend.md](40-system/frontend.md), [api.md](40-system/api.md), [deployment.md](40-system/deployment.md)
 - [photo-infrastructure.md](40-system/photo-infrastructure.md) — фото-инфраструктура (draft, разбор по слоям с 2026-05-30)
 - [mini-app.md](40-system/mini-app.md) — Telegram Mini App клиента: архитектура, эндпоинты, автообновление, деплой (2026-06-04)
-- database/, data-formats/
+- database/, data-formats/ — в т.ч. [trip](40-system/data-formats/trip.md), [client](40-system/data-formats/client.md), [sale](40-system/data-formats/sale.md), [purchase](40-system/data-formats/purchase.md), [procurement-cycle](40-system/data-formats/procurement-cycle.md) (цикл закупки BC-*, ADR-023)
 
 ### 50-agents/ — ИИ-агенты
 - _shared/ — общее для всех агентов (память, инструменты, протоколы)
@@ -100,6 +100,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 Вторичный слой: должностные инструкции, регламенты, инструкции для клиентов и контрагентов. Собирается из первоисточников.
 
 - for-team/ — [sales-manager](80-instructions/for-team/sales-manager.md), [expeditor](80-instructions/for-team/expeditor.md), [buyer](80-instructions/for-team/buyer.md), [gen_director](80-instructions/for-team/gen_director.md), [eva-quickstart](80-instructions/for-team/eva-quickstart.md)
+- for-partners/ — [supplier-banana](80-instructions/for-partners/supplier-banana.md) (памятка поставщику + чек-лист подключения)
 
 ### 90-decisions/ — Журнал решений (ADR)
 Каждое архитектурное решение зафиксировано отдельным файлом.

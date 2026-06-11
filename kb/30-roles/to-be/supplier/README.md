@@ -8,7 +8,9 @@ references:
   - ../../../35-security/role-catalog.md
   - ../../../90-decisions/ADR-022-role-model-rbac.md
   - ../../../50-agents/eva/scenarios/banana-procurement-orchestration.md
-referenced_by: []
+referenced_by:
+  - ../buyer/processes/banana-procurement-field-DRAFT.md
+  - ../../../80-instructions/for-partners/supplier-banana.md
 ---
 
 # Поставщик (TO-BE, внешняя роль)
