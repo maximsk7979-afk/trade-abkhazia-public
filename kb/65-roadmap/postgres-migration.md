@@ -1,7 +1,7 @@
 ---
 title: Дорожная карта — завершение переезда на Postgres (ADR-024)
 status: active
-last_updated: 2026-06-14
+last_updated: 2026-06-15
 related: [ADR-024, ADR-025]
 ---
 
@@ -18,8 +18,9 @@ related: [ADR-024, ADR-025]
 **Уже в таблице (готово):**
 - `trade-sales-v1` (продажи) — M1, 2026-06-11.
 - `trade-settlements-v2` (платежи/операции) — 2026-06-14.
+- **Шаг A — справочники (2026-06-15):** `trade-cat-clients`, `trade-cat-suppliers`, `trade-cat-products`, `trade-cat-skus`, `trade-cat-staff`, `trade-cat-exptypes`, `trade-cat-contragents`, `trade-cat-projects`, `trade-cat-offices`, `trade-cat-segments` — одна фабрика `cat-store.js`, своя таблица на ключ (`id PK` + `name` + `doc JSONB`). exptypes идентифицируется полем `key` (idField), остальные — `id`.
 
-`STORES` в `server.js` сейчас держит только эти два ключа; `MIGRATED_KEYS` выводится из `STORES`.
+`STORES` в `server.js` держит sales + settlements + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
 
 **Осталось перевести (по числу мест-ссылок в коде — грубая «горячесть»):**
 
@@ -27,22 +28,12 @@ related: [ADR-024, ADR-025]
 |------|----------|---------|--------------|
 | `trade-trips-v8` | рейсы | 30 | Шаг B (горячее, пишут все 3 поверхности + Ева) |
 | `trade-deliveries-v1` | доставки клиентам | 14 | Шаг C |
-| `trade-cat-products` | товары | 14 | Шаг A |
-| `trade-cat-clients` | клиенты | 14 | Шаг A |
 | `trade-batches-v1` | партии (FIFO) | 13 | Шаг C |
-| `trade-cat-staff` | сотрудники | 13 | Шаг A |
 | `trade-whops-v1` | складские операции | 7 | Шаг C |
-| `trade-cat-skus` | SKU | 7 | Шаг A |
-| `trade-cat-exptypes` | типы расходов | 4 | Шаг A |
-| `trade-cat-suppliers` | поставщики | 3 | Шаг A |
-| `trade-cat-contragents` | контрагенты | 2 | Шаг A |
 | `trade-weighted-pricing-v1` | цены/кг весовых | 1 | Шаг D |
 | `trade-purchases-v1` | закупки вне рейса | 1 | Шаг C |
-| `trade-cat-projects` | проекты | 1 | Шаг A |
 | `trade-banana-pricing-v1` | банановое ценообразование | 1 | Шаг D |
 | `trade-pricelist-v1` (SK_PL) | прайс-лист | — | Шаг D |
-| `trade-cat-offices` (SK_OFF) | офисы/склады | — | Шаг A |
-| `trade-cat-segments` (SK_SEG) | сегменты клиентов | — | Шаг A |
 | `trade-banana-cycles` | циклы закупки (Ева) | — | Шаг D |
 | `trade-banana-reprice-v1` | задачи переоценки (Ева) | — | Шаг D |
 
@@ -69,8 +60,10 @@ related: [ADR-024, ADR-025]
 
 ## 3. Очередь шагов (от простого/безопасного к сложному)
 
-### Шаг A — Справочники (самое безопасное, хорошая разминка)
+### Шаг A — Справочники ✅ ГОТОВО (2026-06-15)
 **Ключи:** `trade-cat-clients`, `trade-cat-suppliers`, `trade-cat-products`, `trade-cat-skus`, `trade-cat-staff`, `trade-cat-exptypes`, `trade-cat-contragents`, `trade-cat-projects`, `trade-cat-offices`, `trade-cat-segments`.
+
+**Сделано:** обобщённая фабрика `cat-store.js` (idField настраиваемый: exptypes→`key`, остальные→`id`); регистрация в `STORES`; бэкфилл на старте по маркеру. Писатели переведены на point-op/диф: фронт `saveCat`/`importData` → диф-батч `POST /api/v2/cat/batch` (через `CALC.diffById(arr, arr, idField)`); Ева — `storage.catUpsert(key, item)` → `/api/cat/upsert` (онбординг-привязка `index.js`, `set-client-banana-price.js`); клиенты/поставщики уже были на `catPost`. Тесты: `cat-store.test.js` (idField, name из label, форма batch), `diffById` в calc.test.mjs. Бэкап KV: `*.bak-20260615-cat-migration`. Прод-смоук: add/edit/delete через batch (id- и key-keyed), point-op upsert/remove, 410 на запись массива — пройдено. Прецедент потери клиентов (GAP-019/BUG-007) закрыт.
 
 **Почему первым:** низкая частота записи, низкий риск; правки уже идут через `/api/cat/*` (point-op), которые уважают `STORES` — после регистрации стора многое заработает само. Закрывает «прецедент потери клиента».
 
