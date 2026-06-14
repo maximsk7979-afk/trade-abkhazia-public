@@ -51,3 +51,5 @@ last_updated: 2026-05-31
 | [ADR-021](ADR-021-daily-mixed-trips-day-order.md) | Ежедневные смешанные рейсы + заказ на день | 2026-06-06 | accepted |
 | [ADR-022](ADR-022-role-model-rbac.md) | Ролевая модель и RBAC (жёсткая привязка процессов к ролям) | 2026-06-09 | accepted |
 | [ADR-023](ADR-023-procurement-orchestrator.md) | Оркестратор закупки банана (конечный автомат цикла, два привода) | 2026-06-10 | accepted |
+| [ADR-024](ADR-024-kv-to-postgres-migration.md) | Миграция хранилища KV → PostgreSQL | 2026-06-11 | accepted |
+| [ADR-025](ADR-025-single-domain-layer.md) | Единый доменный слой — Ева и мини-апп суть интерфейсы к системе | 2026-06-14 | accepted |
