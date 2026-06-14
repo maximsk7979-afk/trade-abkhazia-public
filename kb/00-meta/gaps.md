@@ -775,7 +775,15 @@ function fmt(n) {
 **Роли и доступ:** техдолг/рефакторинг, не бизнес-процесс — отдельной ролевой привязки не требует; доступ к сводке клиента гейтится теми же правилами, что и сейчас (RBAC мини-аппа / trade_app, ADR-022). Endpoint обязан соблюдать GAP-030 (клиенту — только своё).
 
 **Приоритет**: high (структурный источник класса багов «интерфейсы показывают разные цифры»; устранять до роста числа поверхностей).
-**Статус**: open — естественно реализуется вместе с миграцией KV→Postgres ([ADR-024](../90-decisions/ADR-024-kv-to-postgres-migration.md)), где вводится сервисный слой. Связано с [ADR-025](../90-decisions/ADR-025-single-domain-layer.md), [ADR-004](../90-decisions/ADR-004-data-source-of-truth.md), [GAP-057](#gap-057) (запись через узкое горлышко).
+**Статус**: **closed 2026-06-14** — баланс клиента теперь имеет ОДИН источник: `trade-api/balance-service` (`clientBalance`/`clientHistory`/`clientSummary`/`clientsRoster`). Все три поверхности зовут его, а не пересчитывают:
+- **Мини-апп** — in-process (`/api/mini/balance|history|home`).
+- **Ева** — по HTTP `GET /api/client/:id/summary` (часть A, копия в `client-data.js` удалена).
+- **Админка `trade_app_v3`** — по HTTP `GET /api/clients/summary` (реестр) и `/api/client/:id/summary` (карточка); локальные `getClientSummary`/`getClientDetail`/`stSaleTotal` и легаси-ветка Д-002 удалены (часть B).
+- **Гейт легаси Д-002 пройден**: в проде `trade-deliveries-v1` = 1 пустая доставка, 0 долгов в старом формате → ветку выкинули без потери данных.
+- Проверено на проде: одна цифра во всех окнах (К-018 = 8685 у Евы / endpoint / админки).
+- Шаг 4 (свести COGS/FIFO/агрегации поставщиков/партнёров — `getSupplierSummary`/`getExpenseSummary`/`getPartnerData`) — **отдельный будущий шаг**, по мере касания (другой расчёт, не баланс клиента).
+
+Связано с [ADR-025](../90-decisions/ADR-025-single-domain-layer.md), [ADR-004](../90-decisions/ADR-004-data-source-of-truth.md), [ADR-024](../90-decisions/ADR-024-kv-to-postgres-migration.md) (миграция KV→Postgres дала чистый фундамент), [GAP-057](#gap-057) (запись через узкое горлышко).
 
 
 
@@ -784,6 +792,7 @@ function fmt(n) {
 
 ## Закрытые
 
+- **GAP-058** — Единый доменный слой: баланс клиента сведён в один источник (`balance-service`); Ева и админка зовут его по HTTP, мини-апп — in-process (closed 2026-06-14, детали — в разделе выше)
 - **GAP-007** — Разделитель дробей (closed 2026-04-28)
 - **GAP-011** — Кнопка `+ Операция` (closed 2026-04-28)
 - **GAP-009** — Закупка вне рейса / сущность Purchase (closed 2026-05-21)
