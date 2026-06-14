@@ -20,18 +20,17 @@ related: [ADR-024, ADR-025]
 - `trade-settlements-v2` (платежи/операции) — 2026-06-14.
 - **Шаг A — справочники (2026-06-15):** `trade-cat-clients`, `trade-cat-suppliers`, `trade-cat-products`, `trade-cat-skus`, `trade-cat-staff`, `trade-cat-exptypes`, `trade-cat-contragents`, `trade-cat-projects`, `trade-cat-offices`, `trade-cat-segments` — одна фабрика `cat-store.js`, своя таблица на ключ (`id PK` + `name` + `doc JSONB`). exptypes идентифицируется полем `key` (idField), остальные — `id`.
 - **Шаг B — рейсы `trade-trips-v8` (2026-06-15):** `trips-store.js` (колонки-индексы `id PK`, `project_id`, `status`, `arr_date`, `date`, `office_id`, `procurement_cycle_id` + `doc JSONB`). Бэкфилл 2/2 в прод. Писатели переведены: trade-api (4 мутации статусов/вместимости → `tripsStore.upsert(trip)`; мёртвый «ленивый» write удалён), фронт (`saveT` + импорт → диф-батч `/api/v2/trips/batch`), Ева (`createBananaTrip`/`updateTripCapacity`/`complete_trip` → `storage.tripUpsert` через `/api/cat/upsert`).
+- **Шаг C1 — доставки `trade-deliveries-v1` + закупки `trade-purchases-v1` (2026-06-15):** `deliveries-store.js` (колонки `status`, `date`, `office_id`) и `purchases-store.js` (колонки `project_id`, `date`, `status`, `office_id`). Бэкфилл 1/1 + 1/1 в прод. Писатели: trade-api (5 мутаций доставок → `deliveriesStore.upsert`; закупок серверных нет), фронт (`saveDlv`/`savePurchases` + импорт → диф-батч `/api/v2/{deliveries,purchases}/batch`), Ева — только читает.
 
-`STORES` в `server.js` держит sales + settlements + рейсы + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
+`STORES` в `server.js` держит sales + settlements + рейсы + доставки + закупки + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
 
 **Осталось перевести (по числу мест-ссылок в коде — грубая «горячесть»):**
 
 | Ключ | Сущность | ~ссылок | Куда отнесён |
 |------|----------|---------|--------------|
-| `trade-deliveries-v1` | доставки клиентам | 14 | Шаг C |
-| `trade-batches-v1` | партии (FIFO) | 13 | Шаг C |
-| `trade-whops-v1` | складские операции | 7 | Шаг C |
+| `trade-batches-v1` | партии (FIFO) | 13 | Шаг C2 |
+| `trade-whops-v1` | складские операции | 7 | Шаг C2 |
 | `trade-weighted-pricing-v1` | цены/кг весовых | 1 | Шаг D |
-| `trade-purchases-v1` | закупки вне рейса | 1 | Шаг C |
 | `trade-banana-pricing-v1` | банановое ценообразование | 1 | Шаг D |
 | `trade-pricelist-v1` (SK_PL) | прайс-лист | — | Шаг D |
 | `trade-banana-cycles` | циклы закупки (Ева) | — | Шаг D |
@@ -93,12 +92,25 @@ related: [ADR-024, ADR-025]
 
 **Смоук в прод (2026-06-15):** бэкфилл 2/2; 410 на массив; Ева-путь — round-trip вместимости Р-002 (100→777→100); фронт-путь — create+delete Р-900 через батч; финальное состояние = исходное (без мусора). Все Eva/trade-api/calc тесты зелёные (добавлен `test/trips-store.test.js`).
 
-### Шаг C — «Погрузка» как одна атомарная транзакция: `trade-batches-v1` + `trade-whops-v1` + `trade-deliveries-v1` (+ `trade-purchases-v1`)
-**Почему вместе:** это смысл M4 в ADR-024. Операция «погрузка/приёмка» сейчас пишет батчи + складские операции + доставки + продажи (`saveMultiple` с откатом UI). Когда все они в таблицах — можно сделать **настоящую транзакцию БД** (одна `BEGIN…COMMIT` через стораы на общем `pool`), и «погрузка» станет по-настоящему атомарной (сбой → откат на уровне БД, а не только UI).
+### Шаг C1 — Доставки `trade-deliveries-v1` + закупки `trade-purchases-v1` ✅ ГОТОВО (2026-06-15)
+**Почему отдельно от C2:** это простые ключи «как A/B» (свои стораы, диф-батч). Их переезд снимает 2 из 4 сущностей с пути к атомарной транзакции C2, оставляя последней только FIFO-связку `batches`↔`whops` (где живёт GAP-057). Система остаётся в гибриде: доставки/закупки в таблицах, батчи/whops пока в KV — каждый ключ пишется отдельно (как и до миграции), атомарности не теряется.
 
-**Это самый сложный шаг** — добавляется кросс-сущностный транзакционный эндпоинт (например `POST /api/v2/load-delivery`), который пишет батчи/whops/доставки/продажи в одной транзакции; фронтовый `doLoadDelivery`/`saveMultiple` зовёт его.
+**Сделано:**
+- `deliveries-store.js` (колонки `id PK`, `status`, `date`, `office_id` + `doc JSONB`; `validateDoc` мягкий `/^Д-\d+/`) и `purchases-store.js` (колонки `id PK`, `project_id`, `date`, `status`, `office_id` + `doc JSONB`; `/^ЗК-\d+/`). Оба по рецепту: `getAll/upsert/remove/batch/migrateFromKV` (бэкфилл идемпотентный по маркеру). Зарегистрированы в `STORES`.
+- **trade-api `server.js`:** 5 серверных записей доставок (`wh/accept-return`, новая доставка, добавление заявки, `dlv/complete`, `dlv/load` — все внутри `withSaleLock`, мутируют один `dlv`) → `deliveriesStore.upsert(...)`. Закупок серверных писателей нет (ключ только читается в сводке). Новые ручки `GET/POST /api/v2/deliveries(/batch)` (диф под `withSaleLock`), `GET/POST /api/v2/purchases(/batch)` (диф под `withCatLock`).
+- **фронт `trade_app_v3.jsx`:** `deliveriesBatchWrite`/`purchasesBatchWrite`; `saveDlv`, `savePurchases` и импорт-восстановление переведены на диф (целый массив в `/api/storage` → 410).
+- **Ева:** только читает доставки/закупки (`get-business-data`, `get-delivery-summary`) через совместимое чтение из таблицы — изменений кода не требуется.
 
-**Колонки-индексы:** батчи — `sku_id`, `status`, `qty_rem` (FIFO-выборка); whops — `type`, `date`, `batch_id`; доставки — `status`, `date`; покупки — `project_id`, `date`.
+**Гибрид (осознанно до C2):** `dlv/load` пишет doc доставки точечно, а батчи/whops — пока `kvSet` в KV. Истинная атомарность всех трёх таблиц одной транзакцией — цель C2.
+
+**Смоук в прод (2026-06-15):** бэкфилл 1/1 (доставки) + 1/1 (закупки); 410 на массив для обоих ключей; совместимое чтение `/api/storage/...` из таблицы; create+delete round-trip `Д-99001`/`ЗК-99001` через батч; финальное состояние = исходное (без мусора). Все trade-api/calc тесты зелёные (добавлены `test/deliveries-store.test.js`, `test/purchases-store.test.js`). KV-бэкап обоих ключей: `/root/kv-backups/*.20260615-011041.json`.
+
+### Шаг C2 — «Погрузка» как одна атомарная транзакция: `trade-batches-v1` + `trade-whops-v1` (+ уже переехавшие доставки/продажи)
+**Почему вместе:** это смысл M4 в ADR-024. Операция «погрузка/приёмка» сейчас пишет батчи + складские операции + доставки + продажи (`saveMultiple` с откатом UI). Когда все они в таблицах — можно сделать **настоящую транзакцию БД** (одна `BEGIN…COMMIT` через стораы на общем `pool`), и «погрузка» станет по-настоящему атомарной (сбой → откат на уровне БД, а не только UI). После C1 осталось переехать только `batches` и `whops`.
+
+**Это самый сложный шаг** — добавляется кросс-сущностный транзакционный эндпоинт (например `POST /api/v2/load-delivery`), который пишет батчи/whops/доставки/продажи в одной транзакции; фронтовый `doLoadDelivery`/`saveMultiple` зовёт его. NB: в `dlv/load` (trade-api) и в `wh/accept-return` батчи/whops пока пишутся `kvSet` рядом с точечным `deliveriesStore.upsert` — при C2 их надо собрать в одну транзакцию вместе с доставкой.
+
+**Колонки-индексы:** батчи — `sku_id`, `status`, `qty_rem` (FIFO-выборка); whops — `type`, `date`, `batch_id`. (доставки `status`/`date` и закупки `project_id`/`date` — сделаны в C1.)
 
 **Риск/гейт:** связан с [GAP-057](../00-meta/gaps.md#gap-057) (storno FIFO при отмене отгрузки) — переезд whops лучше делать с полем `allocations`, чтобы закрыть GAP-057 заодно. FIFO-логика (`whops`↔`batches`) — единственный источник истины; сверить с [GAP-042](../00-meta/gaps.md#gap-042).
 
