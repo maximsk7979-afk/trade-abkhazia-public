@@ -10,7 +10,7 @@ related: [ADR-024, ADR-025]
 > Рабочий план на несколько сессий. Решение и принцип — [ADR-024](../90-decisions/ADR-024-kv-to-postgres-migration.md).
 > Принцип: **по одной сущности за раз, самое горячее/опасное — раньше**; между шагами система полностью рабочая (гибрид «часть в таблицах, часть массивом»).
 
-## 1. Где мы сейчас (факт на 2026-06-14)
+## 1. Где мы сейчас (факт на 2026-06-15)
 
 «Массив в ячейке» = весь список лежит одним JSON-текстом в `app_storage` (ключ → значение).
 «Таблица» = нормальная таблица с колонками-индексами (выжаты из документа) + `doc JSONB` + `updated_at`; чтение массива остаётся совместимым, запись — точечная.
@@ -19,14 +19,14 @@ related: [ADR-024, ADR-025]
 - `trade-sales-v1` (продажи) — M1, 2026-06-11.
 - `trade-settlements-v2` (платежи/операции) — 2026-06-14.
 - **Шаг A — справочники (2026-06-15):** `trade-cat-clients`, `trade-cat-suppliers`, `trade-cat-products`, `trade-cat-skus`, `trade-cat-staff`, `trade-cat-exptypes`, `trade-cat-contragents`, `trade-cat-projects`, `trade-cat-offices`, `trade-cat-segments` — одна фабрика `cat-store.js`, своя таблица на ключ (`id PK` + `name` + `doc JSONB`). exptypes идентифицируется полем `key` (idField), остальные — `id`.
+- **Шаг B — рейсы `trade-trips-v8` (2026-06-15):** `trips-store.js` (колонки-индексы `id PK`, `project_id`, `status`, `arr_date`, `date`, `office_id`, `procurement_cycle_id` + `doc JSONB`). Бэкфилл 2/2 в прод. Писатели переведены: trade-api (4 мутации статусов/вместимости → `tripsStore.upsert(trip)`; мёртвый «ленивый» write удалён), фронт (`saveT` + импорт → диф-батч `/api/v2/trips/batch`), Ева (`createBananaTrip`/`updateTripCapacity`/`complete_trip` → `storage.tripUpsert` через `/api/cat/upsert`).
 
-`STORES` в `server.js` держит sales + settlements + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
+`STORES` в `server.js` держит sales + settlements + рейсы + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
 
 **Осталось перевести (по числу мест-ссылок в коде — грубая «горячесть»):**
 
 | Ключ | Сущность | ~ссылок | Куда отнесён |
 |------|----------|---------|--------------|
-| `trade-trips-v8` | рейсы | 30 | Шаг B (горячее, пишут все 3 поверхности + Ева) |
 | `trade-deliveries-v1` | доставки клиентам | 14 | Шаг C |
 | `trade-batches-v1` | партии (FIFO) | 13 | Шаг C |
 | `trade-whops-v1` | складские операции | 7 | Шаг C |
@@ -78,19 +78,20 @@ related: [ADR-024, ADR-025]
 
 **Смоук:** добавить/править/удалить в каждом справочнике из админки; создание клиента Евой; импорт-восстановление.
 
-### Шаг B — Рейсы `trade-trips-v8` (самое горячее)
+### Шаг B — Рейсы `trade-trips-v8` ✅ ГОТОВО (2026-06-15)
 **Почему отдельно и осторожно:** пишут ВСЕ поверхности + Ева + оркестратор закупки.
 
-**Писатели (полная карта — собрать на старте сессии заново grep'ом, ниже — на 2026-06-14):**
-- **trade-api `server.js`:** `kvSet('trade-trips-v8', trips)` в строках ~401, 881, 973, 1078, 1484 (ленивое создание рейса + мутации статусов/вместимости).
-- **фронт `trade_app_v3.jsx`:** `saveT` (mkSave, ~717) — запись всего массива; импорт-восстановление (~912).
-- **Ева:** ~5 ссылок — `create_banana_trip`/`set_trip_capacity` (`effect-exec.js`), ленивое создание рейса в заказе, `complete_trip`.
+**Сделано:**
+- `trips-store.js` по рецепту (фабрика как sales/settlements): колонки `id PK`, `project_id`, `status`, `arr_date`, `date`, `office_id`, `procurement_cycle_id` + `doc JSONB`; `validateDoc` мягкий (`/^Р-\d+/`, кириллическая Р); `getAll/upsert/remove/batch/migrateFromKV` (бэкфилл идемпотентный по маркеру). Зарегистрирован в `STORES`.
+- **trade-api `server.js`:** мёртвый «ленивый» write (`tripsChanged=false`) удалён; 4 живые мутации (`buyer/load`, `wh/accept`, `exp/save`, `buyer/complete-trip` — все внутри `withSaleLock`, мутируют один `trip`) → `tripsStore.upsert(trip)`. Новые ручки `GET /api/v2/trips`, `POST /api/v2/trips/batch` (диф под `withSaleLock`).
+- **фронт `trade_app_v3.jsx`:** `tripsBatchWrite` (диф `/api/v2/trips/batch`); `saveT` и импорт-восстановление переведены на диф (целый массив в `/api/storage` → 410).
+- **Ева:** `storage.tripUpsert(trip)` (через тот же `/api/cat/upsert`, маршрут по ключу в стор). `effect-exec.createBananaTrip` (создание точечным upsert), `updateTripCapacity`, `complete-trip.js` — переведены. id рейса по-прежнему считается `nextTripId(getAll)` (низкая конкуренция; апсёрт по id атомарен).
 
-**Особенность:** колонки-индексы — `id`, `project_id`, `status`, `arr_date` (запросы «активные рейсы», «по дате доставки», «по проекту»). Ленивое авто-создание рейса (ADR-021) и дедуп по дате — перевести на `upsert` с проверкой существования (атомарный `INSERT ... ON CONFLICT`).
+**Особенность (выполнено):** ленивое авто-создание/дедуп по дате — теперь атомарный `INSERT ... ON CONFLICT (id)`; колонка `procurement_cycle_id` хранит связь цикл→рейс.
 
-**Риск/гейт:** оркестратор закупки (`trade-banana-cycles`) ссылается на `tripId` — переезд рейсов не должен ломать связь цикл→рейс. Мьютексы `withSaleLock`/`withCatLock` — point-op через стор атомарен, в локи НЕ оборачивать и не вкладывать.
+**Гейт пройден:** оркестратор закупки (`trade-banana-cycles`) читает рейсы через `storage.get` (совместимое чтение из таблицы) и находит по `tripId` — связь цикл→рейс цела. Мьютексы не вкладывались (point-op атомарен сам).
 
-**Смоук:** создать рейс (Ева + админка + ленивый из заказа); изменить вместимость/отсечку; завершить рейс; цикл закупки видит свой рейс.
+**Смоук в прод (2026-06-15):** бэкфилл 2/2; 410 на массив; Ева-путь — round-trip вместимости Р-002 (100→777→100); фронт-путь — create+delete Р-900 через батч; финальное состояние = исходное (без мусора). Все Eva/trade-api/calc тесты зелёные (добавлен `test/trips-store.test.js`).
 
 ### Шаг C — «Погрузка» как одна атомарная транзакция: `trade-batches-v1` + `trade-whops-v1` + `trade-deliveries-v1` (+ `trade-purchases-v1`)
 **Почему вместе:** это смысл M4 в ADR-024. Операция «погрузка/приёмка» сейчас пишет батчи + складские операции + доставки + продажи (`saveMultiple` с откатом UI). Когда все они в таблицах — можно сделать **настоящую транзакцию БД** (одна `BEGIN…COMMIT` через стораы на общем `pool`), и «погрузка» станет по-настоящему атомарной (сбой → откат на уровне БД, а не только UI).
