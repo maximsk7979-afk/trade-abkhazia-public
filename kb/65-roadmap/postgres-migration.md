@@ -25,15 +25,16 @@ related: [ADR-024, ADR-025]
 
 `STORES` в `server.js` держит sales + settlements + рейсы + доставки + закупки + партии + whops + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
 
-**Осталось перевести (по числу мест-ссылок в коде — грубая «горячесть»):**
+**Все ключи переведены (миграция завершена 2026-06-15, ADR-024 закрыт):**
 
-| Ключ | Сущность | ~ссылок | Куда отнесён |
-|------|----------|---------|--------------|
-| `trade-weighted-pricing-v1` | цены/кг весовых | 1 | Шаг D |
-| `trade-banana-pricing-v1` | банановое ценообразование | 1 | Шаг D |
-| `trade-pricelist-v1` (SK_PL) | прайс-лист | — | Шаг D |
-| `trade-banana-cycles` | циклы закупки (Ева) | — | Шаг D |
-| `trade-banana-reprice-v1` | задачи переоценки (Ева) | — | Шаг D |
+| Ключ | Сущность | Таблица | Статус |
+|------|----------|---------|--------|
+| `trade-weighted-pricing-v1` | цены/кг весовых | `app_weighted_pricing` (singleton) | ✅ Шаг D |
+| `trade-banana-pricing-v1` | банановое ценообразование | `app_banana_pricing` (singleton) | ✅ Шаг D |
+| `trade-pricelist-v1` (SK_PL) | прайс-лист | `app_pricelist` (singleton) | ✅ Шаг D |
+| `trade-banana-cycles` | циклы закупки (Ева) | `app_banana_cycles` (cat-store) | ✅ Шаг D |
+| `trade-banana-reprice-v1` | задачи переоценки (Ева) | `app_banana_reprice` (cat-store, idField=staffId) | ✅ Шаг D |
+| `eva-usage-v1` | телеметрия Bedrock (не домен) | `app_eva_usage` (singleton) | ✅ Шаг D (D3) |
 
 Константы фронта `SK_*` — `trade_app_v3.jsx:57-74`.
 
@@ -147,15 +148,14 @@ related: [ADR-024, ADR-025]
 
 **Объём:** реалистично несколько сессий. Рекомендация — заходить под-шагами C2.1 → C2.5, деплой+смоук после каждого, чекпоинт с Максимом между ними.
 
-### Шаг D — Финал: ценообразование, циклы Евы, заморозка `/api/storage`
+### Шаг D — Финал: ценообразование, циклы Евы, заморозка `/api/storage` — ✅ ЗАВЕРШЁН (2026-06-15). **ADR-024 ЗАКРЫТ.**
 **Ключи:** `trade-pricelist-v1`, `trade-weighted-pricing-v1`, `trade-banana-pricing-v1`, `trade-banana-cycles`, `trade-banana-reprice-v1`.
 
-**Особенность Евы:** `cycle-store.js` и `reprice-store.js` пишут весь массив через `storage.set(KEY, ...)` — перевести на point-op эндпоинты trade-api (или на свои стораы, если решим оставить отдельным хранилищем Евы — но по ADR-025 предпочтительно единый источник).
+**Сделано (D1 — объект-ключи).** Оказалось, что все три живых ключа ценообразования — это **одиночные объекты**, а не массивы записей. Завёл `singleton-store.js` (одна строка `id='doc'`, `doc JSONB`, мягкий `validateDoc`: объект, не массив, <1 МБ; `migrateFromKV` с маркером `_migrated:<key>`). Таблицы `app_pricelist`, `app_weighted_pricing`, `app_banana_pricing`. Новый эндпоинт `POST /api/v2/doc/:key` пишет весь документ point-op'ом (терпит обёртку `{value}`). Писатели: фронт `savePl`/импорт → `docWrite(SK_PL, ...)`; Ева — `storage.setDoc(KEY, ...)` (`banana-pricing-admin`, `weighted-pricing-admin`). `kvGet`/`GET /api/storage/:key` отдают объект (ветка `SINGLETONS` до `STORES`). Бэкфилл 1/1/1.
 
-**Завершение ADR-024:**
-- перевести `POST/DELETE /api/storage` в **read-only legacy** (все записи — через стораы/эндпоинты);
-- убрать мёртвые пути записи всего массива; grep'ом подтвердить, что `kvSet`/`window.storage.set` массивом нигде не остался;
-- ADR-024 → закрыт.
+**Сделано (D2 — массивы-документы Евы).** `trade-banana-cycles` (по `id`) и `trade-banana-reprice-v1` (по `staffId`) переведены на общую `cat-store` фабрику (`app_banana_cycles`, `app_banana_reprice` c idField=`staffId`). `cycle-store.js`/`reprice-store.js` больше **не делают read-modify-write всего массива** — пишут point-op через новый метод Евы `storage.catBatch(key, {upsert, del})` → `POST /api/v2/cat/batch`; `reprice.replaceAll` считает диф против `loadAll` (удаляемые staffId). В прод оба ключа пусты (бэкфилл 0). По ADR-025 — единый источник (таблицы trade-api), не отдельное хранилище Евы.
+
+**Сделано (D3 — заморозка `/api/storage` + закрытие).** `POST/DELETE /api/storage/:key` → **read-only legacy: 410 для ВСЕХ ключей** (раньше — 410 только для мигрированных). `GET /api/storage/:key` оставлен (legacy-чтение). Последний нетиповой писатель — телеметрия Bedrock `eva-usage-v1` (объект, не доменная сущность) — переведён на singleton-стор `app_eva_usage` (`usage-tracker.js`: `storage.set` → `storage.setDoc`; бэкфилл сохранил текущий месячный счётчик). Убраны **мёртвые пути записи массива** во фронте (`mkSave`, `saveMultiple` — определены, нигде не вызывались; единственные `window.storage.set`). Grep чист: `window.storage.set`/`storage.set(`/`kvSet`-массивом в коде нет (остался лишь `kvSet` внутри trade-api как read-modify-write для немигрированных ключей в `/api/cat/*`, защищённый `MIGRATED_KEYS`-гейтом). Тесты: trade-api (singleton-store 9 + все стораы) и eva — зелёные. Прод-смоук: POST/DELETE `/api/storage` → 410, GET → value, `POST /api/v2/doc/eva-usage-v1` → ok; 6 таблиц (`app_pricelist`/`app_weighted_pricing`/`app_banana_pricing`/`app_eva_usage`/`app_banana_cycles`/`app_banana_reprice`) на месте. Деплой trade-api → eva → trade-app; бэкап `eva-usage-v1` в `/root/kv-backups/stepD-evausage.*`.
 
 ## 4. Сквозные риски (помнить на каждом шаге)
 - **Мягкий `validateDoc`** — иначе бэкфилл теряет записи с нестандартным id.
@@ -165,11 +165,11 @@ related: [ADR-024, ADR-025]
 - **Порядок деплоя:** trade-api (эндпоинты живут) → потом фронт/Ева (потребители).
 - **Бэкап KV-ключа и прод-исходников** перед каждым деплоем; смоук после каждого.
 
-## 5. Готово, когда (Definition of Done ADR-024)
-- Все ключи из таблицы §1 — в Postgres-таблицах; `STORES` содержит их все.
-- `POST/DELETE /api/storage` — read-only legacy; запись массивом в коде отсутствует (grep чист).
-- «Погрузка» атомарна на уровне БД.
-- Ни одной копии доменной логики поверх KV (ADR-025); Ева/мини-апп/админка — интерфейсы к одной системе.
+## 5. Готово, когда (Definition of Done ADR-024) — ✅ ВЫПОЛНЕНО (2026-06-15)
+- ✅ Все ключи из таблицы §1 — в Postgres-таблицах; `STORES`/`SINGLETONS` содержат их все (+ телеметрия `eva-usage-v1` в `app_eva_usage`).
+- ✅ `POST/DELETE /api/storage` — read-only legacy (410 для всех ключей); запись массивом/объектом в коде отсутствует (grep чист).
+- ✅ «Погрузка» атомарна на уровне БД (C2.3/C2.5).
+- ✅ Ни одной копии доменной логики поверх KV (ADR-025); Ева/мини-апп/админка — интерфейсы к одной системе.
 
 ## 6. После переезда — единый калькулятор для ВСЕХ видов платежей и контрагентов
 > Согласовано с Максимом 2026-06-14. Делать **после** завершения миграции (нужен чистый фундамент-таблицы). Это шаг 4 [GAP-058](../00-meta/gaps.md#gap-058).

@@ -1,7 +1,8 @@
 ---
 title: "ADR-024: Миграция KV-хранилища на таблицы Postgres (поэтапная, по сущностям)"
-status: accepted
+status: done
 date: 2026-06-11
+closed: 2026-06-15
 references:
   - ADR-009-multitenancy-projects.md
   - ../00-meta/gaps.md
@@ -82,3 +83,16 @@ referenced_by: []
 - **Optimistic locking поверх KV (version-поле)** — лечит lost update, но не даёт ни транзакций,
   ни выборок, ни масштаба; столько же правок клиентов при худшем итоге.
 - **Отдельная новая БД/сервис** — Postgres уже стоит и бэкапится (runbook), KV и так в нём.
+
+## Итог (закрыто 2026-06-15)
+
+Миграция завершена полностью. Все доменные ключи (`app_storage`-массивы) переведены в типизированные
+таблицы Postgres: sales, settlements, рейсы, доставки, закупки, партии, whops, 10 справочников
+(стораы → `STORES`), ценообразование `app_pricelist`/`app_weighted_pricing`/`app_banana_pricing`
++ циклы/переоценка Евы `app_banana_cycles`/`app_banana_reprice` (Шаг D), а также нетиповая
+телеметрия `eva-usage-v1` → `app_eva_usage`. `POST/DELETE /api/storage` — read-only legacy (410
+для всех ключей); запись идёт только point-op'ом через стораы/эндпоинты (`/api/cat/*`,
+`/api/v2/<entity>/batch`, `/api/v2/doc/<key>`). Погрузка/sale-direct атомарны на уровне БД
+транзакцией (C2.3/C2.5). Подробный лог шагов и DoD — [postgres-migration.md](../65-roadmap/postgres-migration.md).
+Следующий шаг поверх чистого фундамента — единый калькулятор для всех контрагентов
+([GAP-058](../00-meta/gaps.md#gap-058), §6 дорожной карты).
