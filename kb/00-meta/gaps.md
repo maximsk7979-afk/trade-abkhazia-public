@@ -794,7 +794,9 @@ function fmt(n) {
 - **Админка `trade_app_v3`** — по HTTP `GET /api/clients/summary` (реестр) и `/api/client/:id/summary` (карточка); локальные `getClientSummary`/`getClientDetail`/`stSaleTotal` и легаси-ветка Д-002 удалены (часть B).
 - **Гейт легаси Д-002 пройден**: в проде `trade-deliveries-v1` = 1 пустая доставка, 0 долгов в старом формате → ветку выкинули без потери данных.
 - Проверено на проде: одна цифра во всех окнах (К-018 = 8685 у Евы / endpoint / админки).
-- Шаг 4 (свести COGS/FIFO/агрегации поставщиков/партнёров — `getSupplierSummary`/`getExpenseSummary`/`getPartnerData`) — **отдельный будущий шаг**, по мере касания (другой расчёт, не баланс клиента).
+- Шаг 4 (свести COGS/FIFO/агрегации поставщиков/партнёров — `getSupplierSummary`/`getExpenseSummary`/`getPartnerData`) — **по мере касания, в работе**:
+  - **Поставщики ✅ сведены 2026-06-15.** `getSupplierSummary`/`getSupplierDetail` во фронте удалены; админка зовёт КАНОН `buyer-service` по HTTP — `GET /api/suppliers/summary` (реестр, `forBuyer=false` → видны и местные PRJ-002) и `GET /api/supplier/:id/summary` (леджер). Те же эндпоинты/модуль, что мини-апп закупщика. Чистый рефактор (цифры совпали — каждый поставщик в одной валюте), плюс попутно починен ярлык валюты: карточка местного ₽-поставщика показывала «₾», теперь валюта из ответа (BUG-021). Комментарии «зеркало getSupplierSummary» в `buyer-service.js`/`server.js` сняты.
+  - **Остаток (отложено, single-copy — нет второй поверхности):** `getPartnerData` (Лия) и `getExpenseSummary`/`getExpenseDetail` (контрагенты-расходы) существуют только во фронте, Ева/мини-апп их не агрегируют → выносить на сервер преждевременно (по «вызывать, а не копировать» дублирования пока нет). Line-формула `itemTotal`↔`calcItemG` остаётся единственным зеркалом (у `calcItemG` много потребителей COGS/отображения во фронте) — отдельный остаточный пункт.
 
 Связано с [ADR-025](../90-decisions/ADR-025-single-domain-layer.md), [ADR-004](../90-decisions/ADR-004-data-source-of-truth.md), [ADR-024](../90-decisions/ADR-024-kv-to-postgres-migration.md) (миграция KV→Postgres дала чистый фундамент), [GAP-057](#gap-057) (запись через узкое горлышко).
 
