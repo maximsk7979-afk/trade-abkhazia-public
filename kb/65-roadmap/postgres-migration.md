@@ -21,15 +21,14 @@ related: [ADR-024, ADR-025]
 - **Шаг A — справочники (2026-06-15):** `trade-cat-clients`, `trade-cat-suppliers`, `trade-cat-products`, `trade-cat-skus`, `trade-cat-staff`, `trade-cat-exptypes`, `trade-cat-contragents`, `trade-cat-projects`, `trade-cat-offices`, `trade-cat-segments` — одна фабрика `cat-store.js`, своя таблица на ключ (`id PK` + `name` + `doc JSONB`). exptypes идентифицируется полем `key` (idField), остальные — `id`.
 - **Шаг B — рейсы `trade-trips-v8` (2026-06-15):** `trips-store.js` (колонки-индексы `id PK`, `project_id`, `status`, `arr_date`, `date`, `office_id`, `procurement_cycle_id` + `doc JSONB`). Бэкфилл 2/2 в прод. Писатели переведены: trade-api (4 мутации статусов/вместимости → `tripsStore.upsert(trip)`; мёртвый «ленивый» write удалён), фронт (`saveT` + импорт → диф-батч `/api/v2/trips/batch`), Ева (`createBananaTrip`/`updateTripCapacity`/`complete_trip` → `storage.tripUpsert` через `/api/cat/upsert`).
 - **Шаг C1 — доставки `trade-deliveries-v1` + закупки `trade-purchases-v1` (2026-06-15):** `deliveries-store.js` (колонки `status`, `date`, `office_id`) и `purchases-store.js` (колонки `project_id`, `date`, `status`, `office_id`). Бэкфилл 1/1 + 1/1 в прод. Писатели: trade-api (5 мутаций доставок → `deliveriesStore.upsert`; закупок серверных нет), фронт (`saveDlv`/`savePurchases` + импорт → диф-батч `/api/v2/{deliveries,purchases}/batch`), Ева — только читает.
+- **Шаг C2.1 — партии `trade-batches-v1` + складские операции `trade-whops-v1` (2026-06-15):** `batches-store.js` (колонки `sku_id`, `qty_rem` NUMERIC, `trip_id`, `purchase_id`, `office_id`) и `whops-store.js` (колонки `op_type`, `date`, `delivery_id`, `sku_id`). Бэкфилл 3/3 + 1/1 в прод. Писатели: trade-api (приёмка рейса/возврата/recost/погрузка `depart`+`load` → `batchesStore`/`whopsStore` через `diffById(prev,next)` + локальный хелпер `diffById`), фронт (`saveBatches`/`saveWh` + импорт → диф-батч `/api/v2/{batches,whops}/batch`). **sale-direct** пока считает FIFO в браузере и пишет результат диф-батчем (промежуточный гибрид — серверный перенос в C2.3). Запись массивом → 410. Тесты 14+14. **C2.2–C2.5 (allocations/storno/атомарная транзакция) — ещё впереди.**
 
-`STORES` в `server.js` держит sales + settlements + рейсы + доставки + закупки + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
+`STORES` в `server.js` держит sales + settlements + рейсы + доставки + закупки + партии + whops + 10 справочников; `MIGRATED_KEYS` выводится из `STORES`.
 
 **Осталось перевести (по числу мест-ссылок в коде — грубая «горячесть»):**
 
 | Ключ | Сущность | ~ссылок | Куда отнесён |
 |------|----------|---------|--------------|
-| `trade-batches-v1` | партии (FIFO) | 13 | Шаг C2 |
-| `trade-whops-v1` | складские операции | 7 | Шаг C2 |
 | `trade-weighted-pricing-v1` | цены/кг весовых | 1 | Шаг D |
 | `trade-banana-pricing-v1` | банановое ценообразование | 1 | Шаг D |
 | `trade-pricelist-v1` (SK_PL) | прайс-лист | — | Шаг D |
@@ -105,16 +104,46 @@ related: [ADR-024, ADR-025]
 
 **Смоук в прод (2026-06-15):** бэкфилл 1/1 (доставки) + 1/1 (закупки); 410 на массив для обоих ключей; совместимое чтение `/api/storage/...` из таблицы; create+delete round-trip `Д-99001`/`ЗК-99001` через батч; финальное состояние = исходное (без мусора). Все trade-api/calc тесты зелёные (добавлены `test/deliveries-store.test.js`, `test/purchases-store.test.js`). KV-бэкап обоих ключей: `/root/kv-backups/*.20260615-011041.json`.
 
-### Шаг C2 — «Погрузка» как одна атомарная транзакция: `trade-batches-v1` + `trade-whops-v1` (+ уже переехавшие доставки/продажи)
-**Почему вместе:** это смысл M4 в ADR-024. Операция «погрузка/приёмка» сейчас пишет батчи + складские операции + доставки + продажи (`saveMultiple` с откатом UI). Когда все они в таблицах — можно сделать **настоящую транзакцию БД** (одна `BEGIN…COMMIT` через стораы на общем `pool`), и «погрузка» станет по-настоящему атомарной (сбой → откат на уровне БД, а не только UI). После C1 осталось переехать только `batches` и `whops`.
+### Шаг C2 — `trade-batches-v1` + `trade-whops-v1` → Postgres + атомарная погрузка + storno (GAP-057) — ДИЗАЙН (2026-06-15, ждёт ok Максима)
 
-**Это самый сложный шаг** — добавляется кросс-сущностный транзакционный эндпоинт (например `POST /api/v2/load-delivery`), который пишет батчи/whops/доставки/продажи в одной транзакции; фронтовый `doLoadDelivery`/`saveMultiple` зовёт его. NB: в `dlv/load` (trade-api) и в `wh/accept-return` батчи/whops пока пишутся `kvSet` рядом с точечным `deliveriesStore.upsert` — при C2 их надо собрать в одну транзакцию вместе с доставкой.
+**Почему это не «ещё две таблицы как C1».** Разведка кода (2026-06-15) показала: батчи/whops пишутся **с двух сторон**, и часть FIFO-логики живёт в браузере:
 
-**Колонки-индексы:** батчи — `sku_id`, `status`, `qty_rem` (FIFO-выборка); whops — `type`, `date`, `batch_id`. (доставки `status`/`date` и закупки `project_id`/`date` — сделаны в C1.)
+*Серверные писатели (trade-api, поверхность мини-аппа/экспедитор):*
+- `POST /api/wh/accept` (`buildBatches`) — приёмка рейса кладовщиком: создаёт партии (`server.js:1080`).
+- `POST /api/wh/accept-return` (`acceptReturn`) — приёмка возврата: партии + whops receipt/writeoff (`1131/1132`).
+- `POST /api/wh/recost` (`recostBatches`) — пересчёт себестоимости партий рейса (`1187`, меняет только `costPerUnit`).
+- `POST /api/dlv/load` (`fifo-batch` allocate/deduct) — погрузка: FIFO-вычет + whops shipment + доставка→«В пути» (`1858–1897`). Уже считает `allAllocs` и кладёт их на доставку как `_fifoAllocs`.
 
-**Риск/гейт:** связан с [GAP-057](../00-meta/gaps.md#gap-057) (storno FIFO при отмене отгрузки) — переезд whops лучше делать с полем `allocations`, чтобы закрыть GAP-057 заодно. FIFO-логика (`whops`↔`batches`) — единственный источник истины; сверить с [GAP-042](../00-meta/gaps.md#gap-042).
+*Фронтовые писатели (trade_app_v3.jsx, поверхность owner/админка) — пишут МАССИВ + клиентский FIFO:*
+- `changeSt` рейса → «На складе» (`1726 saveBatches`) — создаёт партии (дубль серверного `buildBatches`!).
+- `savePurchase`/`deleteP` (`2386/2398`) — партии закупки вне рейса (source `purchase`).
+- **создание sale-direct** (`4152 fifoAllocate` → `4154 fifoDeduct` → `4157 saveBatches`, `4176 saveWh`) — клиентский FIFO-вычет.
+- `completeDelivery` (`4982 fifoAddBatch` → `4984/4985`) — возврат непроданного: партии + whops receipt.
+- WarehouseMod ручные операции (`3315/3318/3324 saveWh`), `refreshFromSales` (`3297`).
+- импорт-восстановление (`987/999 window.storage.set`).
 
-**Смоук:** полный цикл «погрузка у поставщика → приёмка → FIFO-партия → отгрузка → завершение»; искусственный сбой в середине → откат БД (ничего не записано).
+*Клиентский FIFO (`trade_app_calc.mjs` через `CALC.*`):* `fifoStock/fifoAllocate/fifoDeduct/fifoReturn/fifoAddBatch` — параллельная реализация серверного `fifo-batch.js` + копии в `delivery-service.js`. **Тройное дублирование доменной логики — прямое нарушение ADR-025.**
+
+*GAP-057 подтверждён в коде:* `deleteDlv` (`4786`), `delSale` для sale-direct (`4225`, удаляет whops, но **не возвращает `qtyRem`**), `deleteP` (`2398`), `delOp` (`3324`), backward `changeSt` (`1669` — явный комментарий «партии не откатываются») — **ни один не делает компенсирующий возврат в FIFO**. `saveMultiple` (`795`) — мёртвый код (0 вызовов).
+
+**Ключевое архитектурное решение (по ADR-025): FIFO становится серверным и единственным.** Нельзя просто «обернуть массив в стор» — пока sale-direct делает FIFO в браузере и пишет целый массив, после 410 он сломается. Поэтому переезд батчей/whops **обязывает** перенести клиентские FIFO-писатели на серверные транзакционные эндпоинты (как уже сделано для погрузки в `/api/dlv/load`). Это и закрывает дубль FIFO, и даёт настоящую атомарность.
+
+#### Предлагаемое разбиение C2 на под-шаги (система рабочая между каждым)
+
+- **C2.1 ✅ DONE (2026-06-15)** — стораы + чтение + простые/серверные писатели. `batches-store.js` (колонки `sku_id`, `qty_rem` NUMERIC, `trip_id`, `purchase_id`, `office_id`; PK `id` `B-NNNN`), `whops-store.js` (колонки `op_type`, `date`, `delivery_id`, `sku_id`; PK `id` `WH-*`). Зарегистрированы в `STORES`, бэкфилл 3/3 + 1/1 по маркеру. Серверные писатели (`wh/accept`/`accept-return`/`exp/save`-recost/`dlv/depart`/`dlv/load`) переведены на стораы через локальный `diffById(prev,next)` — каждый отдельным `batch`/`upsert` (без общей транзакции — гибрид как C1). Фронт: `saveBatches`/`saveWh` и импорт → диф-батч `/api/v2/{batches,whops}/batch`. Запись массивом → 410. Тесты 14+14. Бандл `index-E0-vyxIa.js`.
+  - **Тонкость (остаётся):** sale-direct (клиентский FIFO + saveBatches/saveWh) пишет результат диф-батчем — корректно, но FIFO ещё в браузере. Полный перенос — C2.3.
+- **C2.2 — модель аллокаций whop (фундамент storno).** В whops shipment добавить `allocations: [{batchId, qty, costPerUnit}]` при создании (в `/api/dlv/load` данные уже есть — `allAllocs`, привязать поштучно к whop, а не агрегатом на доставку). Бэкфилл существующих whops best-effort из `_fifoAllocs` доставки. Колонка-индекс `batch_id` не нужна (allocations в doc); сверка склада — [GAP-042](../00-meta/gaps.md#gap-042).
+- **C2.3 — серверные атомарные писатели sale-direct (закрытие дубля FIFO, ADR-025).** Новые эндпоинты `POST /api/v2/sale-direct/{create,update,delete}` (или общий), выполняющие allocate/deduct/return + запись batches+whops+sales **в одной транзакции БД** через стораы на общем `client`. Фронт `SalesMod` зовёт их вместо клиентского FIFO. Клиентские `CALC.fifo*`-вызовы-писатели удаляются (остаётся только `fifoStock` для отображения — чтение).
+- **C2.4 — storno при отмене (ядро GAP-057).** `deleteDlv`/`delSale`/`deleteP`/backward-`changeSt` → серверные эндпоинты, делающие **видимый компенсирующий возврат** (`qtyRem += qty` по сохранённым `allocations`, storno-whop типа `storno`/`reversal`) в одной транзакции; **fail-closed**: тихое удаление отгрузки с FIFO-списанием запрещено без storno. Роли (GAP-057): инициирует sales_manager/expeditor/warehouse, **решает owner/gen_director**, исполняет система, видит owner/ГД/fin/warehouse в «Движении по складу». (NB: trade_app сейчас без per-action гейта — GAP-048; storno-операцию и видимость делаем сразу, ролевой гейт — по мере закрытия GAP-048.)
+- **C2.5 — настоящая транзакция погрузки/приёмки.** `/api/dlv/load`, `/api/wh/accept`, `/api/wh/accept-return` пишут все затронутые таблицы (batches+whops+deliveries+sales) одной `BEGIN…COMMIT` через стораы на общем `client` вместо нынешних раздельных `upsert`/`kvSet`. Сбой → откат БД, а не только UI.
+
+**Колонки-индексы:** батчи — `sku_id`, `qty_rem` (FIFO-выборка), `trip_id`/`purchase_id` (источник); whops — `op_type`, `date`, `delivery_id`. (доставки/закупки — сделаны в C1.)
+
+**Риски/гейты:** (1) клиентский FIFO ≠ серверный по нюансам (sale-direct edit делает `fifoReturn` старых аллокаций — серверный аналог нужен) — сверять построчно; (2) дубль приёмки рейса (фронтовый `changeSt`→batches vs серверный `/api/wh/accept`) — определить единый путь, иначе двойные партии; (3) [GAP-042](../00-meta/gaps.md#gap-042) сверка «движение↔партии»; (4) бэкфилл whops без allocations — storno для исторических whops по эвристике/ручной сверке.
+
+**Смоук (на каждом под-шаге):** полный цикл «приёмка рейса → партия → погрузка (FIFO-вычет) → отгрузка → завершение → приёмка возврата»; **отдельно для C2.4**: создать sale-direct → удалить → `qtyRem` вернулся, storno-whop виден; **для C2.5**: искусственный сбой в середине погрузки → откат БД (ничего не записано).
+
+**Объём:** реалистично несколько сессий. Рекомендация — заходить под-шагами C2.1 → C2.5, деплой+смоук после каждого, чекпоинт с Максимом между ними.
 
 ### Шаг D — Финал: ценообразование, циклы Евы, заморозка `/api/storage`
 **Ключи:** `trade-pricelist-v1`, `trade-weighted-pricing-v1`, `trade-banana-pricing-v1`, `trade-banana-cycles`, `trade-banana-reprice-v1`.
