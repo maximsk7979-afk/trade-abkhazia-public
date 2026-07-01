@@ -49,7 +49,7 @@ last_updated: 2026-06-11
 - trips.md, sales.md, deliveries.md, pricing.md, ... — правила по доменам
 - settlements/ — взаиморасчёты (клиенты, поставщики, Лия, контрагенты)
 - invoices/ — накладные (двухуровневая база: `_common/` + `suppliers/<id>/`, см. ADR-011)
-- financial-reporting/ — формы отчётов (P&L, акт сверки)
+- financial-reporting/ — формы отчётов (P&L, акт сверки); **accounting-rules/** — правила финучёта по статьям (рабочий раздел)
 
 ### 25-integrations/ — Внешние сервисы
 Telegram, AWS Bedrock, Anthropic API, Google Sheets, Yandex Maps.
