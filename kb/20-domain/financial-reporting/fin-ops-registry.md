@@ -25,8 +25,8 @@ references:
 | 4 | `expense_paygo` — расход «начисление в момент оплаты» | catId(payGo), contId, amount, wallet, date | ↓ | обороты контрагента (пара, баланс 0) | B3 по статье, датой оплаты | — | owner, gd, ops (+мини-ГД) | Касса, Расчёты, мини-ГД |
 | 5 | `expense_model_b` — расход без стороны | catId(МодельБ), amount, wallet, date | ↓ | — (обосн.: стороны нет) | B3 по статье, датой оплаты | — | все кассовые роли | Касса, мини |
 | 6 | `staff_bonus` — премия | staffId, amount, wallet, date | ↓ | обороты сотрудника (пара, 0) | B3 «Премия», датой выплаты | — | owner, ops | Касса (TradeApp) |
-| 7 | `client_payment` — оплата от клиента | clientId, amount, wallet, date, saleRef? | ↑ | долг клиента ↓ | — (выручка по отгрузке) | — | все кассовые роли | развоз/продажи (интеграция), Расчёты, Касса |
-| 8 | `walkin_payment` — оплата разового | saleId, amount, wallet | ↑ | — (леджера нет; canonical `saleData.paid`) | — | — | (внутр. для sale-direct) | продажи |
+| 7 | `client_payment` — оплата от клиента ✅ (интеграция с продажами — Этап 3.3) | clientId, amount, wallet, date, saleRef? | ↑ | долг клиента ↓ | — (выручка по отгрузке) | — | все кассовые роли | Расчёты, Касса, транзакция sale-direct (saleRef), мини clients/op и развоз |
+| 8 | `walkin_payment` — оплата разового ✅ (Этап 3.3) | saleId, amount, wallet, date | ↑ | — (леджера нет; canonical `saleData.paid`; нога refType:sale) | — | — | продающие роли; вызывается транзакцией продажи (applyFinOp) и мини | продажи (браузер+мини) |
 
 ## Группа 2 — Внутренние движения (Этап 1)
 
