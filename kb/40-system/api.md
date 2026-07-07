@@ -1,7 +1,7 @@
 ---
 title: API
 status: active
-last_updated: 2026-06-04
+last_updated: 2026-07-07
 references:
   - database/overview.md
   - frontend.md
@@ -36,11 +36,16 @@ DELETE /api/photos           → { ok }                                JSON body
 
 Бизнес-логики на бэкенде минимум: `/api/storage/*` — прокси к KV-таблице `app_storage`; `/api/photos` — валидация + сохранение файла на диск + обновление массива `photoField` на бизнес-сущности.
 
-## Авторизация
+## Авторизация (обновлено 2026-07-07, [GAP-078](../00-meta/gaps.md#gap-078))
 
-- `/api/storage/*`, `/api/health`, `/api/photos` — **нет авторизации**. CORS `*`. JWT_SECRET и `bcryptjs` лежат в `.env` и зависимостях, но не используются.
+Анонимного доступа к API больше нет. Полная карта механизмов — [35-security/auth-architecture.md](../35-security/auth-architecture.md):
 
-⚠️ **Это блокер для запуска Евы с клиентами и контрагентами.** Задача "Реализовать ролевой доступ (RBAC)" — в [roadmap](../65-roadmap/current.md). После RBAC оба endpoint-а одинаково перейдут на JWT-проверку пользовательской сессии.
+- **веб-пути** (`/api/storage` GET, `/api/v2`, `/api/cat`, `/api/fin`, `/api/dlv`, `/api/cash`, `/api/pnl`, `/api/turnover`, `/api/client(s)`, `/api/supplier(s)`, `/api/contragent(s)`) — гейт `webGate`: сессионная httpOnly-cookie (вход по логину-паролю, `web-auth.js`) ИЛИ `X-Internal-Token` (Ева/скрипты); роль `demo` — только чтение;
+- `/api/mini/*` — Telegram `initData` (HMAC, `mini-auth.js`) + ролевые гейты;
+- `/api/photos` — статический `X-Photo-Token` (отсечка сканеров);
+- `/api/health`, `/api/auth/*` (login rate-limited) — без гейта.
+
+CORS — только `https://trade-abkhazia.com` (с Фазы 1 аудита 2026-06-11, не `*`).
 
 ## Что делает GET / POST / DELETE
 
