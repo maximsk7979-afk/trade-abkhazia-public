@@ -127,9 +127,17 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [ADR-019](90-decisions/ADR-019-eva-mini-app.md) — Telegram Mini App как поверхность структурных действий Евы
 - [ADR-020](90-decisions/ADR-020-order-intake-banana-pricing.md) — приём заявок под рейс + банановое ценообразование + границы полномочий
 - [ADR-021](90-decisions/ADR-021-daily-mixed-trips-day-order.md) — ежедневные смешанные рейсы + заказ на день + единый каталог по проектам клиента
+- [ADR-022](90-decisions/ADR-022-role-model-rbac.md) — ролевая модель и RBAC (роль-биндинг как обязательный слой)
+- [ADR-023](90-decisions/ADR-023-procurement-orchestrator.md) — оркестратор закупки
+- [ADR-024](90-decisions/ADR-024-kv-to-postgres-migration.md) — миграция KV → Postgres (закрыт 2026-06-15)
+- [ADR-025](90-decisions/ADR-025-single-domain-layer.md) — единый доменный слой (Ева/мини-апп = интерфейсы одной системы)
+- [ADR-026](90-decisions/ADR-026-notifications-unified-layer.md) — единый слой уведомлений (спецификация; реализация после Ф-5)
+- [ADR-027](90-decisions/ADR-027-fin-ops-engine.md) — финансовый операционный движок (fin-ops, журнал операций, сторно комплектом)
+- [ADR-028](90-decisions/ADR-028-audit-log.md) — журнал всех изменений БД (audit_log: кто/когда/откуда/что)
 
 ### 95-changelog/ — История изменений
-- [2026-Q2.md](95-changelog/2026-Q2.md) — текущий квартал
+- [2026-Q3.md](95-changelog/2026-Q3.md) — текущий квартал
+- [2026-Q2.md](95-changelog/2026-Q2.md)
 
 ### 99-archive/ — Устаревшее
 - old-context-md/ — копия исходного `CONTEXT.md` для разбора по новой структуре

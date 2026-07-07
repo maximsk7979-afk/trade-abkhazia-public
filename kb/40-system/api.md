@@ -47,6 +47,13 @@ DELETE /api/photos           → { ok }                                JSON body
 
 CORS — только `https://trade-abkhazia.com` (с Фазы 1 аудита 2026-06-11, не `*`).
 
+## Журнал изменений ([ADR-028](../90-decisions/ADR-028-audit-log.md), 2026-07-07)
+
+Каждая запись/удаление через сторы фиксируется в `audit_log`: актор + время + источник
+(web/mini/eva/internal/system) + сущность + состояние после. Чтение — `GET /api/audit`
+(фильтры entity/entityId/actor/source/from/to/limit; demo → 403) и вкладка «🕓 Журнал»
+в TradeApp. Append-only, ручки записи нет.
+
 ## Что делает GET / POST / DELETE
 
 ```javascript
