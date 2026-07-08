@@ -47,6 +47,16 @@ DELETE /api/photos           → { ok }                                JSON body
 
 CORS — только `https://trade-abkhazia.com` (с Фазы 1 аудита 2026-06-11, не `*`).
 
+## Отчёты финблока (Ф-2…Ф-4, каноны ADR-025)
+
+- `GET /api/cash/report?asOf=` — отчёт «Касса»/Cash Flow (кошельки, ₽/₾, mark-to-market).
+- `GET /api/pnl?from=&to=&office=` — P&L двух уровней (выручка/COGS/валовая/opex/чистая).
+- `GET /api/balances` — сводные балансы «кто кому должен» (агрегатор канонов; Ф-4, 2026-07-08).
+- `GET /api/partner/summary` — канон баланса партнёра (Лия).
+- `GET /api/balances/act[.pdf]?type=client|supplier|contragent|partner&id=&from=&to=` — акт сверки за период.
+
+Поверхности: веб-вкладка «📊 Отчёты» (P&L/Баланс/Cash Flow), Ева (`get_pnl`, `get_balances`, `get_cash_all`).
+
 ## Журнал изменений ([ADR-028](../90-decisions/ADR-028-audit-log.md), 2026-07-07)
 
 Каждая запись/удаление через сторы фиксируется в `audit_log`: актор + время + источник
