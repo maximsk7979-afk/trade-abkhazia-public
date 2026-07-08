@@ -54,8 +54,9 @@ CORS — только `https://trade-abkhazia.com` (с Фазы 1 аудита 2
 - `GET /api/balances` — сводные балансы «кто кому должен» (агрегатор канонов; Ф-4, 2026-07-08).
 - `GET /api/partner/summary` — канон баланса партнёра (Лия).
 - `GET /api/balances/act[.pdf]?type=client|supplier|contragent|partner&id=&from=&to=` — акт сверки за период.
+- `GET /api/balance-sheet` — ПОЛНЫЙ баланс А=О+К (Ф-5): деньги+дебиторка+запасы FIFO+ОС / кредиторка / капитал+балансирующая; реестр ОС — док `app-fixed-assets` (`POST /api/v2/doc/app-fixed-assets`).
 
-Поверхности: веб-вкладка «📊 Отчёты» (P&L/Баланс/Cash Flow), Ева (`get_pnl`, `get_balances`, `get_cash_all`).
+Поверхности: веб-вкладка «📊 Отчёты» (P&L / Взаиморасчёты / Cash Flow / Баланс), Ева (`get_pnl`, `get_balances`, `get_balance_sheet`, `get_cash_all`).
 
 ## Журнал изменений ([ADR-028](../90-decisions/ADR-028-audit-log.md), 2026-07-07)
 
