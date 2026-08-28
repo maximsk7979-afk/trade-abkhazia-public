@@ -33,12 +33,15 @@ referenced_by: []
 | Исходники | `code/retail-app/` (`index.html` shell, `app.js`, `app.css`, `img/`) |
 | На VPS | `/var/www/trade/public/retail/` |
 | URL | `https://trade-abkhazia.com/retail/` |
-| Бот | отдельный розничный, **не Ева** (`scripts/retail-bot-setup.sh`) |
+| Бот | **@sryinka_bot** — отдельный розничный, не Ева (токен в `~/secrets-trade/`, настройка `scripts/retail-bot-setup.sh`) |
 | Деплой | `./scripts/deploy.sh retail-app` |
 
 **Nginx** (`/etc/nginx/sites-enabled/trade`): оболочка и `version.json` — `no-store`;
 `img/` — `max-age=2592000`. Иначе 1,6 МБ фотографий перекачивались бы при каждом открытии.
 Каталоги должны быть `755` — иначе nginx отдаёт 403 (наступали 2026-08-29).
+
+**Вход для сотрудников:** https://t.me/sryinka_bot → menu-кнопка «🧺 Магазин».
+Процесса бота нет — кнопка живёт на стороне Telegram, падать нечему.
 
 ## Автообновление
 
