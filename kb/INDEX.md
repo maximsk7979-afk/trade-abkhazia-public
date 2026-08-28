@@ -80,6 +80,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 - [photo-infrastructure.md](40-system/photo-infrastructure.md) — фото-инфраструктура (draft, разбор по слоям с 2026-05-30)
 - [mini-app.md](40-system/mini-app.md) — Telegram Mini App клиента: архитектура, эндпоинты, автообновление, деплой (2026-06-04)
 - [retail-app-feature-map.md](40-system/retail-app-feature-map.md) — **розничное приложение-доставка: карта функций (design, 2026-08-27)** — есть-в-ядре/достраиваем/новое + матрица 4 плоскостей + роль-биндинг
+- [retail-mini-app.md](40-system/retail-mini-app.md) — **розничный мини-апп «С рынка» (прототип дизайна, 2026-08-29)** — Telegram, отдельный бот, шаг заказа, не подключён к системе
 - database/, data-formats/ — в т.ч. [trip](40-system/data-formats/trip.md), [client](40-system/data-formats/client.md), [sale](40-system/data-formats/sale.md), [purchase](40-system/data-formats/purchase.md), [procurement-cycle](40-system/data-formats/procurement-cycle.md) (цикл закупки BC-*, ADR-023)
 
 ### 50-agents/ — ИИ-агенты
