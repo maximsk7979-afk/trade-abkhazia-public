@@ -17,13 +17,24 @@ references:
 
 ## Источники истины кода
 
-| Что | Где |
-|---|---|
-| Frontend | `~/Documents/trade_app/trade_app_v3.jsx` (локально), `/var/www/trade/frontend/src/App.jsx` (VPS) |
-| API | `/var/www/trade/server.js` (VPS) |
-| Бот (отключён, как референс) | `/var/www/trade/bot_expeditor.js` (VPS), `~/Documents/trade_app/bot_expeditor_v10.js` (локально) |
-| База данных | PostgreSQL `trade_db`, таблица `app_storage` (VPS) |
-| Конфиг VPS | Nginx, PM2, `.env` (VPS) |
+**Источник истины — репозиторий** (с 2026-05-21, [ADR-001](../90-decisions/ADR-001-git-github.md)).
+На VPS лежит задеплоенный артефакт: сверять надо с репо, а правки вносить в репо и
+выкатывать через `./scripts/deploy.sh`, а не править файлы на боевом.
+
+| Что | В репозитории (истина) | На боевом VPS (артефакт) |
+|---|---|---|
+| Frontend | `code/trade_app_v3.jsx` + `code/trade_app_calc.mjs` | `/var/www/trade/frontend/src/App.jsx`, `calc.mjs` |
+| API | `code/trade-api/*.js` (`server.js` и сервисы) | `/var/www/trade/*.js` |
+| Общие ядра (ADR-025) | `code/trade-api/*.cjs` (`trip-cost-core`, `purchase-cost-core`, `cash-core`) | и в `/var/www/trade/`, и в `frontend/src/trade-api/` |
+| Ева | `code/eva/src/` | `/var/www/eva/src/` |
+| Мини-апп | `code/mini-app/` | `/var/www/trade/public/mini/` |
+| Розничный мини-апп (прототип) | `code/retail-app/` | `/var/www/trade/public/retail/` |
+| Бот (отключён, как референс) | `code/bot_expeditor_v10.js`, `v9` | `/var/www/trade/bot_expeditor.js` |
+| База данных | — | PostgreSQL `trade_db`, таблица `app_storage` |
+| Конфиг VPS | — | Nginx, PM2, `.env` |
+
+Рабочая копия репозитория — на станции: `/home/max/trade_app_repo/`
+(см. [workstation-rebuild.md](../70-operations/runbooks/workstation-rebuild.md)).
 
 ## Триггеры сверки
 

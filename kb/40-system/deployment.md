@@ -15,15 +15,20 @@ referenced_by: []
 
 ## Что деплоится
 
-- Файл `~/Documents/trade_app/trade_app_v3.jsx` (мастер-копия)
-- Vite собирает его в статический бандл
+- `code/trade_app_v3.jsx` + `code/trade_app_calc.mjs` из репозитория (мастер-копия)
+- вместе с ними — три общих ядра `code/trade-api/*.cjs` (ADR-025), которые vite вбандливает
+- Vite собирает всё это в статический бандл на VPS
 - Nginx раздаёт бандл на https://trade-abkhazia.com
 
 ## Поток
 
 ```
-[Локально на Маке]                        [На VPS]
-trade_app_v3.jsx  ──── scp ────►   /var/www/trade/frontend/src/App.jsx
+[Станция: /home/max/trade_app_repo]        [На VPS]
+code/trade_app_v3.jsx      ──┐
+code/trade_app_calc.mjs      ├─ scp ──►  /var/www/trade/frontend/src/
+code/trade-api/*.cjs (×3)  ──┘             ├── App.jsx
+   (trip-cost, purchase-cost, cash)        ├── calc.mjs
+                                           └── trade-api/*.cjs
                                           │
                                           │ npx vite build (на VPS)
                                           ▼
@@ -36,12 +41,18 @@ trade_app_v3.jsx  ──── scp ────►   /var/www/trade/frontend/src
                                    https://trade-abkhazia.com
 ```
 
+Всю цепочку выполняет `./scripts/deploy.sh trade-app` (тесты → бэкап → scp → build →
+проверка бандла). Руками файлы не копируем: без ядер фронт считает по старой логике.
+
+## Чем деплоится остальное
+
+Тот же скрипт, другие цели — `eva`, `trade-api`, `mini-app`, `retail-app`, `all`
+(`all` = trade-api + eva + trade-app + mini-app; розничный прототип выкатывается отдельно).
+
 ## Что НЕ деплоится автоматически
 
-- API (`server.js`) — вручную, при изменении (редко)
 - Конфиг Nginx — вручную
 - БД-миграции — нет (пока через seed-блоки)
-- Сервис Евы (`/var/www/eva/`) — вручную через `scp` + `pm2 restart eva`
 - Фото-файлы — раздаются Nginx из `/var/www/trade/photos/`, отдельно не деплоятся
 
 ## Требования инфраструктуры под фото-инфраструктуру ([ADR-016](../90-decisions/ADR-016-photo-infrastructure.md))
@@ -56,7 +67,8 @@ trade_app_v3.jsx  ──── scp ────►   /var/www/trade/frontend/src
 
 Детали по слоям — [photo-infrastructure.md](photo-infrastructure.md).
 
-## Что нужно менять под Еву и git-flow
+## Куда развивать дальше
 
-- Сейчас деплой делается **из мастер-копии на Маке** через `scp`. После git-репозитория правильно — деплой **из репозитория** через CI/CD или хотя бы git pull на VPS.
-- Это задача в [roadmap](../65-roadmap/current.md).
+Деплой идёт **из репозитория** (`scripts/deploy.sh`, с 2026-06-11) — прежняя схема
+«мастер-копия на Маке → scp» отменена. Следующий шаг, когда появится потребность —
+CI/CD через GitHub Actions вместо запуска скрипта с рабочего места.

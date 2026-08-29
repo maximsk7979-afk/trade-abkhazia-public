@@ -15,7 +15,8 @@ referenced_by: []
 
 Single-file React SPA для админки/работы с системой.
 
-- **Исходник (мастер)**: `~/Documents/trade_app/trade_app_v3.jsx` (~15 326 строк, единый файл)
+- **Исходник (мастер)**: `code/trade_app_v3.jsx` в репозитории (~9,6 тыс. строк; расчёты
+  вынесены в `code/trade_app_calc.mjs` и общие ядра `code/trade-api/*.cjs`, ADR-025)
 - **На VPS**: `/var/www/trade/frontend/src/App.jsx` (копия) → `npx vite build` → `/var/www/trade/public/`
 - **Стек**: React 18.3 + Vite 5.4, без Redux/MobX, чисто `useState/useEffect`
 - **Хранилище**: PostgreSQL `app_storage` через `/api/storage/:key`

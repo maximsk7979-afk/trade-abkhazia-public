@@ -106,16 +106,13 @@ pm2 logs eva --lines 30
 ### 5. Bundle trade_app
 
 ```sh
-# Локально: убедиться, что trade_app_v3.jsx синхронизирован с репо
-cp ~/Documents/trade_app_repo/code/trade_app_v3.jsx ~/Documents/trade_app/trade_app_v3.jsx
-# scp на VPS
-scp ~/Documents/trade_app/trade_app_v3.jsx root@trade-abkhazia.com:/var/www/trade/frontend/src/App.jsx
-# Сборка на VPS
-ssh root@trade-abkhazia.com
-cd /var/www/trade/frontend
-npx vite build
-ls -la /var/www/trade/public/assets/   # запомнить новый бандл index-XXX.js
+# Из корня репозитория: тесты → бэкап → scp (jsx + calc.mjs + ядра ADR-025) → vite build
+# → проверка бандла. Имя нового бандла скрипт печатает сам.
+./scripts/deploy.sh trade-app
 ```
+
+> Ручная scp-цепочка отменена: вместе с `trade_app_v3.jsx` обязаны уезжать `calc.mjs` и
+> три общих ядра `.cjs` — см. [deploy-frontend.md](deploy-frontend.md).
 
 ### 6. Cron — чистка `/tmp/eva` и `/tmp/api-uploads`
 

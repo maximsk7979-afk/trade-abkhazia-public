@@ -39,7 +39,7 @@ ssh root@trade-abkhazia.com 'cp /var/www/eva/src/<файл>.bak-<дата>-<ме
 
 ### Вариант Б — из git (надёжный, к любой версии)
 ```bash
-cd ~/Documents/trade_app_repo
+cd /home/max/trade_app_repo       # станция (на ноутбуке — ~/Documents/trade_app_repo)
 git log --oneline                 # найти нужный коммит
 git checkout <commit> -- code/trade_app_v3.jsx   # (или code/eva/..., code/trade-api/...)
 # затем редеплой по runbook deploy-frontend.md / mini-app.md

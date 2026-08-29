@@ -1,10 +1,11 @@
 ---
 title: Runbook — деплой фронтенда
 status: active
-last_updated: 2026-04-28
+last_updated: 2026-08-29
 references:
   - ../../40-system/deployment.md
   - ../infrastructure.md
+  - ../../90-decisions/ADR-025-single-domain-layer.md
 referenced_by: []
 ---
 
@@ -12,52 +13,55 @@ referenced_by: []
 
 ## Когда применять
 
-После изменения файла `~/Documents/trade_app/trade_app_v3.jsx` локально, когда нужно выкатить новую версию на https://trade-abkhazia.com.
+После правки `code/trade_app_v3.jsx` (или `code/trade_app_calc.mjs`) в репозитории, когда
+нужно выкатить новую версию на https://trade-abkhazia.com.
+
+## Как деплоить
+
+Из корня репозитория, одной командой:
+
+```bash
+./scripts/deploy.sh trade-app
+```
+
+Скрипт делает всё сам: локальные тесты `calc` → бэкап `App.jsx` на VPS → загрузка файлов →
+`vite build` на VPS → проверка, что новый бандл реально отдаётся. При красных тестах или
+упавшей сборке деплой останавливается, прод остаётся на прежнем бандле.
+
+## Почему нельзя копировать один jsx руками
+
+Фронт не самодостаточен: вместе с ним обязаны уехать `trade_app_calc.mjs` и **три ядра**,
+которые vite вбандливает (ADR-025, единый доменный слой):
+
+| Файл в репо | Куда на VPS |
+|---|---|
+| `code/trade_app_v3.jsx` | `/var/www/trade/frontend/src/App.jsx` |
+| `code/trade_app_calc.mjs` | `/var/www/trade/frontend/src/calc.mjs` |
+| `code/trade-api/trip-cost-core.cjs` | `.../src/trade-api/trip-cost-core.cjs` |
+| `code/trade-api/purchase-cost-core.cjs` | `.../src/trade-api/purchase-cost-core.cjs` |
+| `code/trade-api/cash-core.cjs` | `.../src/trade-api/cash-core.cjs` |
+
+Скопировать только `jsx` — значит выкатить фронт со **старыми ядрами** себестоимости и
+кассы: цифры на экране разъедутся с сервером. Именно этот класс расхождений закрывал
+ADR-025, поэтому ручная scp-цепочка из прежней версии runbook'а отменена.
 
 ## Предусловия
 
-- SSH-пароль к VPS (в локальном `~/secrets-trade/credentials.md`)
-- Установлен `sshpass` локально (или используется обычный `scp` с интерактивным вводом пароля)
-- Локальный файл `trade_app_v3.jsx` готов к деплою
+- `sshpass` установлен; пароль root — из `~/secrets-trade/credentials.md` (раздел `## VPS`),
+  скрипт достаёт его сам (можно переопределить через `SSHPASS`)
+- Рабочее место — станция (`/home/max/trade_app_repo`); писатель одновременно один
 
-## Шаги
+## Проверка
 
-### 1. Загрузить файл на VPS
-
-```bash
-sshpass -p '<password>' scp \
-  ~/Documents/trade_app/trade_app_v3.jsx \
-  root@108.61.167.168:/var/www/trade/frontend/src/App.jsx
-```
-
-(пароль — из локального credentials.md, не из репо)
-
-### 2. Собрать через Vite
-
-```bash
-sshpass -p '<password>' ssh root@108.61.167.168 \
-  "cd /var/www/trade/frontend && npx vite build"
-```
-
-Vite пишет в `../public/`, Nginx сразу раздаёт новый бандл.
-
-### 3. Проверка
-
-Открыть https://trade-abkhazia.com в браузере, убедиться, что изменения применились (можно нужен hard reload Cmd+Shift+R).
+Скрипт печатает имя нового бандла (`index-XXXX.js`) и сам проверяет, что тот отдаётся по
+HTTPS. В браузере — hard reload (Cmd/Ctrl+Shift+R), Telegram-клиент кэш сбрасывает не сразу.
 
 ## Откат
 
-При проблемах:
-1. Вернуть локальный мастер-файл к предыдущей версии (через git: `git checkout <commit> -- trade_app_v3.jsx`)
-2. Повторить шаги 1-2
-
-## Что менять под git-flow
-
-Сейчас деплой — из мастер-копии на Маке. Правильнее:
-- Деплой из git-репозитория (git pull на VPS, потом vite build)
-- Или CI/CD через GitHub Actions
-
-Задача в [roadmap](../../65-roadmap/current.md).
+Бэкап предыдущего `App.jsx` лежит на VPS: `/var/www/trade/frontend/src/App.jsx.bak-<STAMP>`,
+общий каталог деплоя — `/var/www/_bak/deploy-<STAMP>/`. Штатный путь отката — вернуть файл
+в репозитории (`git checkout <commit> -- code/trade_app_v3.jsx`) и повторить деплой: так
+прод и репозиторий остаются согласованы.
 
 ## Связанные документы
 
