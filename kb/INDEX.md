@@ -70,6 +70,7 @@ Telegram, AWS Bedrock, Anthropic API, Google Sheets, Yandex Maps.
 
 - [role-catalog.md](35-security/role-catalog.md) — каталог ролей и назначения (сверено с KV)
 - [role-permissions.md](35-security/role-permissions.md) — матрица «роль × функция × право» (живая, наполняется)
+- [access-keys.md](35-security/access-keys.md) — **инвентарь доступов и ключей**: что где лежит и что отзывать при потере машины
 - [auth-architecture.md](35-security/auth-architecture.md) — аутентификация всех поверхностей: веб логин-пароль (GAP-078), mini initData, internal-токен, фото-токен (2026-07-07)
 - См. [ADR-022](90-decisions/ADR-022-role-model-rbac.md) — ролевая модель и RBAC
 
@@ -93,6 +94,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 
 ### 70-operations/ — Инфраструктура
 - [infrastructure.md](70-operations/infrastructure.md) — VPS, Nginx, PM2, Postgres
+- runbooks/ — [deploy](70-operations/runbooks/deploy-frontend.md), **[workstation-rebuild](70-operations/runbooks/workstation-rebuild.md)** — поднять рабочую станцию с нуля, **[work-from-laptop](70-operations/runbooks/work-from-laptop.md)** — работать с ноутбука без станции
 - runbooks/ — пошаговые инструкции (deploy, add-new-role)
 - monitoring.md — мониторинг (заглушка)
 
