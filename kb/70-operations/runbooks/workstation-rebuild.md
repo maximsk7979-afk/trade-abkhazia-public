@@ -124,8 +124,14 @@ sshpass -e ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no r
 
 ```bash
 mkdir -p /root/trade_app_repo/.claude
-sed 's|/Users/skorokhodovmaxim/Documents/trade_app|/root/trade_app_repo|g' \
-  /root/trade_app_repo/hooks/settings-hooks.json.sample > /root/trade_app_repo/.claude/settings.json
+# ВАЖНО: два правила, а не одно. Скрипты лежат в hooks/, а в образце путь
+# указывает на .claude/hooks/ — без первой замены хук молча не запустится.
+sed -e 's|/Users/skorokhodovmaxim/Documents/trade_app/.claude/hooks|/root/trade_app_repo/hooks|g' \
+    -e 's|/Users/skorokhodovmaxim/Documents/trade_app|/root/trade_app_repo|g' \
+    /root/trade_app_repo/hooks/settings-hooks.json.sample > /root/trade_app_repo/.claude/settings.json
+
+# проверить, что путь ведёт к существующему файлу:
+python3 -c "import json;print(json.load(open('/root/trade_app_repo/.claude/settings.json'))['hooks']['SessionStart'][0]['hooks'][0]['command'])"
 chmod +x /root/trade_app_repo/hooks/*.sh
 mkdir -p ~/.claude && printf '{"permissions":{"defaultMode":"bypassPermissions"}}\n' > ~/.claude/settings.json
 ```
@@ -139,6 +145,16 @@ roadmap, gaps и обязательства. Проверить: в начале
 claude    # первый запуск: выбрать тему, войти в аккаунт по ссылке, вставить код
 ```
 
+Вход интерактивный: Claude Code печатает ссылку, её открывают на телефоне, код
+возвращают в терминал. На headless-сервере удобно вести через tmux:
+
+```bash
+tmux new-session -d -s claude -c /root/trade_app_repo -x 200 -y 50
+tmux send-keys -t claude "claude" Enter
+tmux capture-pane -pt claude | tail -30     # прочитать ссылку
+tmux send-keys -t claude "<код>" Enter
+```
+
 Затем автозапуск (файл юнита — в шаге ниже), проверка `systemctl status claude-rc`.
 
 ## Шаг 9. Приёмка переезда
@@ -150,6 +166,19 @@ claude    # первый запуск: выбрать тему, войти в а
 - [ ] тестовый коммит уходит в GitHub авто-пушем
 - [ ] сессия открывается с телефона
 - [ ] в начале сессии появляется напоминание протокола (хуки живы)
+
+## Грабли, на которые уже наступали
+
+- **`fail2ban` банит за серию неудачных входов** — в том числе автоматизацию, если
+  сломалась подстановка ключа и ssh свалился на пароль. Бан 10 минут, порт отвечает
+  «Connection refused». Адрес ноутбука вынесен в `/etc/fail2ban/jail.d/ignore-owner.conf`;
+  при смене адреса файл нужно обновить. Всегда ходить с `-o BatchMode=yes`.
+- **Путь к хукам** — см. предупреждение в шаге 7.
+- **Старый rsync в macOS** (2.6.9) не понимает `--info`; перенос репозитория надёжнее
+  делать потоком: `tar czf - . | ssh ... 'tar xzf - -C /root/trade_app_repo'`.
+- **Права после переноса с macOS**: файлы приезжают с чужим uid, git ругается
+  «dubious ownership». Лечится `chown -R root:root` + `git config --global --add safe.directory`.
+- **macOS-мусор** `._*` в архиве — удалить: `find . -name '._*' -not -path './.git/*' -delete`.
 
 ## Что НЕ нужно делать
 
