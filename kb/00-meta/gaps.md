@@ -1,7 +1,7 @@
 ---
 title: Очередь белых пятен
 status: active
-last_updated: 2026-07-06 (GAP-078 open — логин/пароль+RBAC+demo в веб-TradeApp, след. сессия; GAP-065 closed — двусторонние складские расхождения фаза 2: проводка из сверки + излишек мест корр-партией + сторно СПИС; GAP-050 фаза 2 closed. Ранее: GAP-077 closed — sale-direct fail-closed при shortage. GAP-059 closed целиком — отчёт «Касса». GAP-064 open — e2e)
+last_updated: 2026-08-29 (GAP-084 open — первоисточники бизнеса вне git; GAP-079/080/081/082/083 open — розница. Ранее: GAP-078 closed, GAP-073 open — уведомления после Ф-5, GAP-064 open — e2e)
 references:
   - maintenance.md
   - code-sync-protocol.md
