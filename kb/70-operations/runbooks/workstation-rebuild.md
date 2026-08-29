@@ -127,16 +127,16 @@ sshpass -e ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no r
 ## Шаг 7. Хуки и права Claude Code
 
 ```bash
-mkdir -p /home/max/trade_app_repo/.claude
-# ВАЖНО: два правила, а не одно. Скрипты лежат в hooks/, а в образце путь
-# указывает на .claude/hooks/ — без первой замены хук молча не запустится.
-sed -e 's|/Users/skorokhodovmaxim/Documents/trade_app/.claude/hooks|/home/max/trade_app_repo/hooks|g' \
-    -e 's|/Users/skorokhodovmaxim/Documents/trade_app|/home/max/trade_app_repo|g' \
-    /home/max/trade_app_repo/hooks/settings-hooks.json.sample > /home/max/trade_app_repo/.claude/settings.json
+REPO=/home/max/trade_app_repo
+mkdir -p $REPO/.claude
+# В образце стоит плейсхолдер __REPO__ — подставляем путь этой машины.
+sed "s|__REPO__|$REPO|g" $REPO/hooks/settings-hooks.json.sample > $REPO/.claude/settings.json
 
-# проверить, что путь ведёт к существующему файлу:
-python3 -c "import json;print(json.load(open('/home/max/trade_app_repo/.claude/settings.json'))['hooks']['SessionStart'][0]['hooks'][0]['command'])"
-chmod +x /home/max/trade_app_repo/hooks/*.sh
+# проверить, что ОБА пути ведут к существующим файлам (иначе хук молча не запустится):
+python3 -c "import json,os;h=json.load(open('$REPO/.claude/settings.json'))['hooks'];\
+print({k:os.path.exists(v[0]['hooks'][0]['command'].split()[1]) for k,v in h.items()})"
+# ожидается {'SessionStart': True, 'UserPromptSubmit': True}
+chmod +x $REPO/hooks/*.sh
 mkdir -p ~/.claude && printf '{"permissions":{"defaultMode":"bypassPermissions"}}\n' > ~/.claude/settings.json
 ```
 
