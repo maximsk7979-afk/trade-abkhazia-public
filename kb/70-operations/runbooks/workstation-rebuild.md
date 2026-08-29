@@ -106,7 +106,16 @@ git config user.name "Maxim Skorokhodov"; git config user.email "maximsk7979@gma
 
 ./scripts/sync-memory.sh restore     # память агента из agent-memory/ → ~/.claude/...
 ln -sf ../../hooks/pre-commit-writer-guard.sh .git/hooks/pre-commit   # защита от расхождения веток
+
+# проверить, что память легла ТУДА, где Claude Code ведёт транскрипты (*.jsonl):
+ls -d ~/.claude/projects/*trade*/          # ожидается ОДИН каталог
 ```
+
+⚠️ **Каталог памяти именуется слугификацией рабочего пути**: `/` и `_` превращаются в `-`,
+то есть `/home/max/trade_app_repo` → `-home-max-trade-app-repo`. Каталог с подчёркиванием
+в имени — признак ошибки переноса. Два каталога опасны: `sync-memory.sh save` может
+затолкать в репозиторий устаревшую память и молча откатить правки. Скрипт теперь вычисляет
+путь сам и при неоднозначности останавливается, но лишний каталог всё равно убрать.
 
 **Секреты** (`~/secrets-trade/credentials.md`) в git НЕ хранятся. Взять из менеджера
 паролей или скопировать с ноутбука:
