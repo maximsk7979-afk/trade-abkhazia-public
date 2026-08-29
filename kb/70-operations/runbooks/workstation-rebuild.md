@@ -96,12 +96,16 @@ cat ~/.ssh/id_ed25519.pub
 ## Шаг 6. Репозиторий, память, секреты
 
 ```bash
-git clone git@github.com:maximsk7979-afk/trade-abkhazia.git /root/trade_app_repo
-cd /root/trade_app_repo
-git config --global --add safe.directory /root/trade_app_repo
+sudo adduser --disabled-password --gecos '' max && sudo usermod -aG sudo max
+echo 'max ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/90-max
+# дальше — от имени max:
+git clone git@github.com:maximsk7979-afk/trade-abkhazia.git ~/trade_app_repo
+cd ~/trade_app_repo
+git config --global --add safe.directory /home/max/trade_app_repo
 git config user.name "Maxim Skorokhodov"; git config user.email "maximsk7979@gmail.com"
 
 ./scripts/sync-memory.sh restore     # память агента из agent-memory/ → ~/.claude/...
+ln -sf ../../hooks/pre-commit-writer-guard.sh .git/hooks/pre-commit   # защита от расхождения веток
 ```
 
 **Секреты** (`~/secrets-trade/credentials.md`) в git НЕ хранятся. Взять из менеджера
@@ -123,16 +127,16 @@ sshpass -e ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no r
 ## Шаг 7. Хуки и права Claude Code
 
 ```bash
-mkdir -p /root/trade_app_repo/.claude
+mkdir -p /home/max/trade_app_repo/.claude
 # ВАЖНО: два правила, а не одно. Скрипты лежат в hooks/, а в образце путь
 # указывает на .claude/hooks/ — без первой замены хук молча не запустится.
-sed -e 's|/Users/skorokhodovmaxim/Documents/trade_app/.claude/hooks|/root/trade_app_repo/hooks|g' \
-    -e 's|/Users/skorokhodovmaxim/Documents/trade_app|/root/trade_app_repo|g' \
-    /root/trade_app_repo/hooks/settings-hooks.json.sample > /root/trade_app_repo/.claude/settings.json
+sed -e 's|/Users/skorokhodovmaxim/Documents/trade_app/.claude/hooks|/home/max/trade_app_repo/hooks|g' \
+    -e 's|/Users/skorokhodovmaxim/Documents/trade_app|/home/max/trade_app_repo|g' \
+    /home/max/trade_app_repo/hooks/settings-hooks.json.sample > /home/max/trade_app_repo/.claude/settings.json
 
 # проверить, что путь ведёт к существующему файлу:
-python3 -c "import json;print(json.load(open('/root/trade_app_repo/.claude/settings.json'))['hooks']['SessionStart'][0]['hooks'][0]['command'])"
-chmod +x /root/trade_app_repo/hooks/*.sh
+python3 -c "import json;print(json.load(open('/home/max/trade_app_repo/.claude/settings.json'))['hooks']['SessionStart'][0]['hooks'][0]['command'])"
+chmod +x /home/max/trade_app_repo/hooks/*.sh
 mkdir -p ~/.claude && printf '{"permissions":{"defaultMode":"bypassPermissions"}}\n' > ~/.claude/settings.json
 ```
 
@@ -149,7 +153,7 @@ claude    # первый запуск: выбрать тему, войти в а
 возвращают в терминал. На headless-сервере удобно вести через tmux:
 
 ```bash
-tmux new-session -d -s claude -c /root/trade_app_repo -x 200 -y 50
+tmux new-session -d -s claude -c /home/max/trade_app_repo -x 200 -y 50
 tmux send-keys -t claude "claude" Enter
 tmux capture-pane -pt claude | tail -30     # прочитать ссылку
 tmux send-keys -t claude "<код>" Enter
@@ -159,7 +163,7 @@ tmux send-keys -t claude "<код>" Enter
 
 ## Шаг 9. Приёмка переезда
 
-- [ ] `cd /root/trade_app_repo && git log --oneline -1` — последний коммит на месте
+- [ ] `cd /home/max/trade_app_repo && git log --oneline -1` — последний коммит на месте
 - [ ] `git rev-parse HEAD^{tree}` совпадает с GitHub
 - [ ] `ls code/retail-app/img/*.jpg | wc -l` = 46
 - [ ] `./scripts/deploy.sh retail-app` проходит
@@ -175,7 +179,7 @@ tmux send-keys -t claude "<код>" Enter
   при смене адреса файл нужно обновить. Всегда ходить с `-o BatchMode=yes`.
 - **Путь к хукам** — см. предупреждение в шаге 7.
 - **Старый rsync в macOS** (2.6.9) не понимает `--info`; перенос репозитория надёжнее
-  делать потоком: `tar czf - . | ssh ... 'tar xzf - -C /root/trade_app_repo'`.
+  делать потоком: `tar czf - . | ssh ... 'tar xzf - -C /home/max/trade_app_repo'`.
 - **Права после переноса с macOS**: файлы приезжают с чужим uid, git ругается
   «dubious ownership». Лечится `chown -R root:root` + `git config --global --add safe.directory`.
 - **macOS-мусор** `._*` в архиве — удалить: `find . -name '._*' -not -path './.git/*' -delete`.
@@ -185,3 +189,7 @@ tmux send-keys -t claude "<код>" Enter
 - Не поднимать станцию на боевом сервере: 1 ядро, 2 ГБ, и рядом магазин.
 - Не класть секреты в git — см. [GAP-006](../../00-meta/gaps.md#gap-006).
 - Не работать одновременно с ноутбука и станции: писатель один (станция).
+  Защиту ставит хук `pre-commit` — см. [work-from-laptop.md](work-from-laptop.md).
+- **Работать под root нельзя**: Claude Code отказывается стартовать в режиме без
+  подтверждений от имени root. Рабочее место живёт под пользователем `max`
+  (`/home/max/trade_app_repo`), у него sudo без пароля.
