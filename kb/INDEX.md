@@ -1,7 +1,7 @@
 ---
 title: Карта базы знаний
 status: active
-last_updated: 2026-06-11
+last_updated: 2026-08-30
 ---
 
 # Карта базы знаний (INDEX)
@@ -91,6 +91,7 @@ Frontend (`trade_app_v3.jsx`), API, БД, физический формат да
 
 ### 65-roadmap/ — План развития
 - [current.md](65-roadmap/current.md) — что делаем сейчас и дальше
+- [retail-golive-plan.md](65-roadmap/retail-golive-plan.md) — **боевой запуск розницы: дорожная карта** (фазы Р-0…Р-9 × 4 слоя, критерии приёмки, решения владельца, риски)
 
 ### 70-operations/ — Инфраструктура
 - [infrastructure.md](70-operations/infrastructure.md) — VPS, Nginx, PM2, Postgres
